@@ -1,0 +1,15 @@
+[
+  {"id": "ecran", "label": "Regarde mon écran", "icone": "oeil", "raccourci": "1", "type": "root",
+   "prompt": "Regarde mon écran et dis-moi en deux phrases ce que tu vois.",
+   "aide": "Root capture l'écran et le décrit"},
+  {"id": "recherche", "label": "Recherche sourcée", "icone": "loupe", "raccourci": "2", "type": "ui",
+   "prefixe": "Cherche sur le web et source chaque fait : ",
+   "aide": "Prépare une recherche web vérifiée"},
+  {"id": "memoire", "label": "Ce que tu sais", "icone": "cerveau", "raccourci": "3", "type": "root",
+   "prompt": "Dis-moi en quelques lignes ce que ta mémoire durable contient.",
+   "aide": "Ce que Root a retenu"},
+  {"id": "site", "label": "Un site", "icone": "lien", "raccourci": "4", "type": "url",
+   "url": "https://example.org", "aide": "Ouvre une page dans Brave"},
+  {"id": "commande", "label": "Une commande", "icone": "eclair", "raccourci": "5", "type": "commande",
+   "commande": ["say", "Bonjour"], "aide": "Lance un programme local (sans shell)"}
+]

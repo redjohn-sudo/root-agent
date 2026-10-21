@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Root</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Toute l'interface est peinte ici, rien d'un terminal. Personnalisable de A à Z :
+       couleurs et motion dans style.css, comportements dans app.js, actions dans actions.json. -->
+  <!-- Le fond : une photo (ui/fond.jpg), réglée dans style.css (#fond) -->
+  <div id="fond" aria-hidden="true"></div>
+
+  <!-- Le dock : le poste de pilotage du harness. Une icône = un panneau. -->
+  <nav id="dock" class="verre" aria-label="Pilotage">
+    <div id="dock-lueur" aria-hidden="true"></div>
+    <div id="dock-icones"></div>
+  </nav>
+  <div id="bulle" class="verre" role="tooltip" aria-hidden="true"><span id="bulle-label"></span><kbd id="bulle-kbd"></kbd></div>
+
+  <!-- Panneau « Cerveaux » : qui pense pour Root -->
+  <aside id="panneau" class="verre" aria-label="Cerveaux" aria-hidden="true">
+    <div class="pan-tete">
+      <div>
+        <div class="pan-titre">Cerveaux</div>
+        <div class="pan-sous">Qui pense pour Root. Même âme, mêmes outils.</div>
+      </div>
+      <button id="pan-fermer" class="pan-fermer" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div id="cerveaux-liste"></div>
+  </aside>
+
+  <div id="app">
+    <header id="tete" class="verre">
+      <div id="sceau" aria-hidden="true"><canvas id="oreillette" width="64" height="64"></canvas></div>
+      <div id="identite">
+        <div id="nom">Root <button id="puce-cerveau" class="puce-cerveau" title="Changer de cerveau (⌘1)"></button></div>
+        <div id="etat"><span id="pastille"></span><span id="etat-texte">à l'écoute</span></div>
+      </div>
+      <canvas id="onde" width="240" height="56" aria-hidden="true"></canvas>
+    </header>
+
+    <main id="fil" aria-live="polite"><div id="fil-inner"></div></main>
+
+    <form id="barre" class="verre" autocomplete="off">
+      <textarea id="saisie" rows="1" placeholder="Parle à Root…"></textarea>
+      <button id="envoyer" type="submit" aria-label="Envoyer">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V6M6.5 11.5 12 6l5.5 5.5"/></svg>
+      </button>
+    </form>
+  </div>
+
+  <!-- La palette : toutes les actions, au clavier -->
+  <div id="palette-voile" hidden>
+    <div id="palette" class="verre" role="dialog" aria-label="Actions">
+      <input id="palette-champ" placeholder="Penser avec…" autocomplete="off">
+      <div id="palette-liste" role="listbox"></div>
+    </div>
+  </div>
+
+  <div id="toasts" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>

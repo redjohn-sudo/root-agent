@@ -1,0 +1,343 @@
+/* Root — l'habillage de la fenêtre. Ce n'est pas un terminal, c'est l'app de Root.
+   Motion repris de la démo Soulbook (hackathon screenpipe) : mêmes courbes, verre
+   givré, arrivées du flou au net, lueur qui glisse. Tout est réglable ici. */
+
+:root {
+  /* couleurs */
+  --vert: #3f9d84;
+  --vert-clair: #6fd4b6;
+  --lueur: rgba(111, 212, 182, 0.38);
+  --ambre: #f0b35a;
+  --encre: #eef3f1;
+  --encre-2: rgba(238, 243, 241, 0.68);
+  --encre-3: rgba(238, 243, 241, 0.42);
+  --trait: rgba(255, 255, 255, 0.10);
+  --trait-fort: rgba(255, 255, 255, 0.24);
+  --verre: rgba(14, 22, 20, 0.46);
+  --verre-fort: rgba(14, 22, 20, 0.64);
+  --toi: rgba(63, 157, 132, 0.26);
+  /* matière : le grain fin du verre givré */
+  --givre: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* mouvement : les courbes de Soulbook */
+  --ease: cubic-bezier(.22, .8, .24, 1);
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --ease-glisse: cubic-bezier(.65, 0, .15, 1);
+  /* formes */
+  --rayon: 20px;
+  --police: -apple-system, "SF Pro Text", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --largeur-fil: 760px;
+  --dock: 64px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+html, body { height: 100%; }
+body {
+  background: #0b0f0e; color: var(--encre); font-family: var(--police);
+  -webkit-font-smoothing: antialiased; overflow: hidden;
+}
+
+/* ── Le fond : lac dans la brume au lever du soleil, arbres nus et reflets
+   (Unsplash 2lPR-5MUliw, 3840 × 2560, licence Unsplash). « cover » remplit la
+   fenêtre sans déformer à toutes les tailles ; la photo suit un peu la souris. */
+#fond {
+  position: fixed; inset: -3%; z-index: 0; background: #1c1f24 url("fond.jpg") 50% 50% / cover no-repeat;
+  transform: translate(calc(var(--mx, 0) * -14px), calc(var(--my, 0) * -9px));
+  transition: transform 1.2s var(--ease);
+  opacity: 0; animation: arrive-fond 2s var(--ease-out) .05s forwards;
+}
+/* un voile très léger en bas (là où l'on lit et tape) et un vignetage doux */
+#fond::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to bottom, rgba(8,10,14,0) 45%, rgba(8,10,14,.32) 100%),
+              radial-gradient(ellipse 95% 85% at 50% 45%, transparent 55%, rgba(8,10,14,.35) 100%);
+}
+@keyframes arrive-fond { from { opacity: 0; filter: blur(18px); transform: scale(1.06); } to { opacity: 1; filter: none; } }
+
+/* ── La matière : verre givré (repris de Soulbook) ───────────────────────── */
+.verre {
+  background: var(--givre) 0 0 / 200px, var(--verre);
+  -webkit-backdrop-filter: blur(30px) saturate(140%); backdrop-filter: blur(30px) saturate(140%);
+  border: 1px solid var(--trait);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), inset 0 -1px 0 rgba(0,0,0,.25), 0 20px 60px -20px rgba(0,0,0,.6);
+}
+
+/* ── Mise en page ────────────────────────────────────────────────────────── */
+#app {
+  position: relative; z-index: 1; height: 100vh;
+  display: flex; flex-direction: column;
+  padding: 14px 18px 14px calc(var(--dock) + 18px);   /* place pour le dock */
+}
+
+/* ── En-tête ─────────────────────────────────────────────────────────────── */
+#tete {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 16px; border-radius: var(--rayon);
+  width: 100%; max-width: var(--largeur-fil); margin: 0 auto;
+  opacity: 0; animation: arrive .9s var(--ease-out) .25s forwards;
+}
+#sceau {
+  width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center;
+  background: rgba(255,255,255,.05); border: 1px solid var(--trait);
+  box-shadow: 0 0 26px var(--lueur);
+}
+#oreillette { width: 32px; height: 32px; image-rendering: pixelated; }
+#identite { display: flex; flex-direction: column; gap: 3px; }
+#nom { font-size: 17px; font-weight: 650; letter-spacing: .2px; }
+#etat { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--encre-2); }
+#pastille {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--vert-clair); box-shadow: 0 0 10px var(--vert-clair);
+  animation: respire 2.4s ease-in-out infinite;
+}
+body.reflechit #pastille { animation-duration: .7s; }
+@keyframes respire { 0%, 100% { opacity: .45; transform: scale(1); } 50% { opacity: 1; transform: scale(1.18); } }
+#onde { margin-left: auto; width: 120px; height: 28px; }
+
+/* ── Le fil ──────────────────────────────────────────────────────────────── */
+#fil { flex: 1; overflow-y: auto; scrollbar-width: none; padding: 22px 0 12px; }
+#fil::-webkit-scrollbar { display: none; }
+#fil-inner {
+  width: 100%; max-width: var(--largeur-fil); margin: 0 auto;
+  display: flex; flex-direction: column; gap: 14px;
+}
+
+/* Tout ce qui entre dans le fil arrive du flou au net (Soulbook « arrive ») */
+.entre { opacity: 0; filter: blur(10px); transform: translateY(10px);
+         animation: arrive .7s var(--ease-out) forwards; }
+@keyframes arrive { to { opacity: 1; filter: none; transform: none; } }
+
+.msg { max-width: 82%; font-size: 14.5px; line-height: 1.62; }
+.msg.toi {
+  align-self: flex-end; padding: 10px 15px;
+  background: var(--givre) 0 0 / 200px, var(--toi);
+  -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px);
+  border: 1px solid rgba(111,212,182,.28);
+  border-radius: var(--rayon) var(--rayon) 6px var(--rayon);
+}
+.msg.root {
+  align-self: flex-start; display: flex; gap: 0;
+  border-radius: 6px var(--rayon) var(--rayon) var(--rayon); overflow: hidden;
+}
+.msg.root .liseré { width: 3px; flex: none; background: linear-gradient(var(--vert-clair), var(--vert) 60%, transparent); }
+.msg.root .corps { padding: 11px 16px; }
+.msg.root .corps p { margin: 0 0 8px; } .msg.root .corps p:last-child { margin: 0; }
+.msg.root .corps strong { color: var(--vert-clair); font-weight: 600; }
+.msg.root .corps code { font-family: var(--mono); font-size: 12.5px; background: rgba(255,255,255,.07); padding: 1px 5px; border-radius: 5px; }
+.msg.root .corps pre { font-family: var(--mono); font-size: 12.5px; background: rgba(0,0,0,.3); padding: 10px 12px; border-radius: 10px; overflow-x: auto; margin: 6px 0; }
+.msg.root .corps a { color: var(--vert-clair); }
+.msg.alerte .liseré { background: linear-gradient(var(--ambre), transparent); }
+
+.duree { align-self: flex-start; font-size: 11.5px; color: var(--encre-3); margin: -6px 0 0 6px; }
+
+/* Une action de Root (appel d'outil) : une puce qui tourne, puis se valide */
+.outil {
+  align-self: flex-start; max-width: 82%;
+  border-radius: 14px; font-size: 12.5px; overflow: hidden;
+  transition: background .3s var(--ease);
+}
+.outil-tete { display: flex; align-items: center; gap: 9px; padding: 8px 12px; cursor: pointer; }
+.outil-tete .nom { font-family: var(--mono); color: var(--encre); }
+.outil-tete .args { font-family: var(--mono); color: var(--encre-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 380px; }
+.outil .rond { width: 14px; height: 14px; flex: none; border-radius: 50%; border: 2px solid var(--trait-fort); border-top-color: var(--vert-clair); animation: tourne .8s linear infinite; }
+.outil.fait .rond { border: 0; animation: none; background: var(--vert-clair); box-shadow: 0 0 10px var(--lueur);
+                    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat; animation: claque .5s var(--ease-out); }
+.outil.refuse .rond { border: 0; animation: none; background: var(--ambre); border-radius: 3px; width: 10px; height: 10px; margin: 0 2px; }
+@keyframes tourne { to { transform: rotate(360deg); } }
+@keyframes claque { 40% { transform: scale(1.4); } }
+.outil-detail { max-height: 0; overflow: hidden; transition: max-height .5s var(--ease-glisse); }
+.outil.ouvert .outil-detail { max-height: 280px; overflow-y: auto; }
+.outil-detail pre { font-family: var(--mono); font-size: 11.5px; color: var(--encre-2); white-space: pre-wrap; padding: 0 12px 10px 35px; }
+
+.capture { align-self: flex-start; max-width: 70%; border-radius: 14px; overflow: hidden; border: 1px solid var(--trait); box-shadow: 0 20px 50px -20px rgba(0,0,0,.7); }
+.capture img { display: block; width: 100%; }
+
+/* La demande d'autorisation : une carte, deux gestes */
+.demande { align-self: stretch; border-radius: var(--rayon); padding: 14px 16px; border-color: rgba(240,179,90,.35); }
+.demande .titre { font-size: 13.5px; color: var(--ambre); margin-bottom: 6px; }
+.demande .titre b { font-family: var(--mono); font-weight: 500; }
+.demande pre { font-family: var(--mono); font-size: 11.5px; color: var(--encre-2); white-space: pre-wrap; word-break: break-word; margin-bottom: 12px; }
+.demande .gestes { display: flex; gap: 8px; }
+.demande button { padding: 8px 14px; border-radius: 11px; font-size: 13px; transition: transform .15s var(--ease), background .2s; }
+.demande button:active { transform: scale(.94); }
+.demande .oui { background: var(--vert); color: #06120e; font-weight: 600; box-shadow: 0 0 18px var(--lueur); }
+.demande .non { background: rgba(255,255,255,.07); border: 1px solid var(--trait); }
+.demande kbd { font-family: var(--mono); font-size: 10.5px; opacity: .7; margin-left: 6px; }
+.demande.tranchee { opacity: .55; }
+.demande.tranchee .gestes { display: none; }
+
+/* ── La barre de saisie (le chat flottant de Soulbook) ───────────────────── */
+#barre {
+  display: flex; align-items: flex-end; gap: 10px;
+  width: 100%; max-width: var(--largeur-fil); margin: 6px auto 0;
+  padding: 4px 4px 4px 14px; border-radius: 17px; align-items: center;
+  transition: border-color .3s var(--ease), box-shadow .3s var(--ease);
+  opacity: 0; animation: arrive .9s var(--ease-out) .45s forwards;
+}
+#barre:focus-within { border-color: rgba(111,212,182,.5); box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 20px 60px -20px rgba(0,0,0,.6), 0 0 0 4px rgba(111,212,182,.14); }
+#saisie { flex: 1; resize: none; border: 0; outline: 0; background: transparent; color: var(--encre);
+          font: 14px/1.45 var(--police); max-height: 140px; padding: 5px 0; }
+#saisie::placeholder { color: var(--encre-3); }
+#envoyer { width: 28px; height: 28px; flex: none; border-radius: 50%; display: grid; place-items: center; color: #06120e;
+           background: var(--vert-clair); box-shadow: 0 0 20px var(--lueur); transition: transform .15s var(--ease), filter .2s; }
+#envoyer:hover { filter: brightness(1.1); } #envoyer:active { transform: scale(.9); }
+body.reflechit #envoyer { animation: respire 1.2s ease-in-out infinite; }
+
+/* ── Le dock (le rail de Soulbook) ───────────────────────────────────────── */
+/* Le dock est soudé au bord gauche de la fenêtre, sur toute la hauteur. */
+#dock {
+  position: fixed; left: 0; top: 0; bottom: 0; z-index: 20; width: var(--dock);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  padding: 14px 0; border-radius: 0;
+  border-width: 0 1px 0 0;
+  opacity: 0; animation: arrive-dock 1s var(--ease-out) .5s forwards;
+}
+@keyframes arrive-dock { from { opacity: 0; filter: blur(10px); transform: translateX(-14px); } to { opacity: 1; filter: none; transform: none; } }
+#dock-actions { display: flex; flex-direction: column; gap: 6px; }
+.dock-btn {
+  position: relative; width: 44px; height: 44px; border-radius: 14px;
+  display: grid; place-items: center; color: var(--encre-2);
+  transition: color .35s var(--ease), background .35s var(--ease), scale .35s var(--ease-out);
+}
+.dock-btn svg { width: 21px; height: 21px; transition: filter .35s var(--ease); }
+.dock-btn:hover { color: var(--encre); background: rgba(255,255,255,.07); scale: 1.08; }
+.dock-btn:active { scale: .9; }
+.dock-btn.frappe { animation: frappe .55s var(--ease-out); color: var(--vert-clair); }
+.dock-btn.frappe svg { filter: drop-shadow(0 0 8px var(--lueur)); }
+@keyframes frappe { 35% { scale: 1.2; } }
+.dock-btn .onde-clic { position: absolute; inset: 0; border-radius: inherit; border: 2px solid var(--vert-clair); opacity: 0; pointer-events: none; }
+.dock-btn.frappe .onde-clic { animation: onde-clic .6s var(--ease-out); }
+@keyframes onde-clic { from { opacity: .8; transform: scale(.8); } to { opacity: 0; transform: scale(1.5); } }
+.dock-sep { width: 22px; height: 1px; background: var(--trait); margin: 4px 0; }
+
+/* La lueur qui glisse vers le bouton survolé (rail-glow de Soulbook) */
+#dock-lueur {
+  position: absolute; left: 0; top: 0; width: 3px; height: 22px; border-radius: 0 3px 3px 0;
+  background: linear-gradient(var(--vert-clair), var(--vert));
+  box-shadow: 0 0 12px var(--vert-clair), 0 0 26px var(--lueur);
+  opacity: 0; pointer-events: none;
+  transition: transform .75s var(--ease-glisse), opacity .5s var(--ease);
+}
+#dock-lueur.on { opacity: 1; }
+
+/* L'étiquette qui glisse à droite du dock */
+#bulle {
+  position: fixed; z-index: 30; left: calc(var(--dock) + 8px); top: 0; display: flex; align-items: center; gap: 10px;
+  padding: 7px 11px; border-radius: 11px; font-size: 12.5px; pointer-events: none; white-space: nowrap;
+  opacity: 0; translate: -8px 0; transition: opacity .25s var(--ease), translate .4s var(--ease-out);
+}
+#bulle.on { opacity: 1; translate: 0 0; }
+kbd { font: 500 10.5px var(--mono); color: var(--encre-2); padding: 2px 6px; border-radius: 6px; border: 1px solid var(--trait-fort); background: rgba(255,255,255,.05); }
+
+/* ── La palette ⌘K ───────────────────────────────────────────────────────── */
+#palette-voile { position: fixed; inset: 0; z-index: 50; display: grid; place-items: start center; padding-top: 14vh;
+                 background: rgba(4,8,7,.35); animation: voile .3s var(--ease) both; }
+#palette-voile[hidden] { display: none; }
+@keyframes voile { from { opacity: 0; } }
+#palette { width: min(560px, calc(100vw - 48px)); border-radius: 22px; overflow: hidden; animation: palette .45s var(--ease-out) both; }
+@keyframes palette { from { opacity: 0; filter: blur(12px); transform: translateY(-10px) scale(.97); } }
+#palette-champ { width: 100%; padding: 16px 20px; font: 16px var(--police); color: var(--encre); background: transparent; border: 0; outline: 0; border-bottom: 1px solid var(--trait); }
+#palette-liste { max-height: 50vh; overflow-y: auto; padding: 6px; }
+.p-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border-radius: 13px; text-align: left; color: var(--encre-2); transition: background .2s var(--ease), color .2s; }
+.p-item svg { width: 18px; height: 18px; flex: none; }
+.p-item .p-aide { margin-left: auto; font-size: 12px; color: var(--encre-3); }
+.p-item.choisi { background: rgba(111,212,182,.13); color: var(--encre); }
+.p-item.choisi svg { color: var(--vert-clair); }
+
+/* ── Les toasts ──────────────────────────────────────────────────────────── */
+#toasts { position: fixed; bottom: 96px; left: 50%; translate: -50% 0; z-index: 40; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
+.toast { padding: 9px 15px; border-radius: 14px; font-size: 13px; animation: toast-in .5s var(--ease-out) both; }
+.toast.ko { border-color: rgba(240,179,90,.45); }
+.toast.sort { animation: toast-out .4s var(--ease) forwards; }
+@keyframes toast-in { from { opacity: 0; filter: blur(8px); transform: translateY(12px) scale(.96); } }
+@keyframes toast-out { to { opacity: 0; filter: blur(6px); transform: translateY(8px); } }
+
+/* ── L'icône active (son panneau est ouvert) ─────────────────────────────── */
+.dock-btn.ouvert { color: var(--vert-clair); background: rgba(111,212,182,.12); }
+.dock-btn.ouvert svg { filter: drop-shadow(0 0 8px var(--lueur)); }
+
+/* ── Le cerveau actif, dans l'en-tête ─────────────────────────────────────── */
+#nom { display: flex; align-items: center; gap: 10px; }
+.puce-cerveau {
+  font: 500 11.5px var(--police); color: var(--vert-clair);
+  padding: 3px 9px; border-radius: 999px;
+  background: rgba(111,212,182,.12); border: 1px solid rgba(111,212,182,.28);
+  transition: background .25s var(--ease), transform .15s var(--ease);
+}
+.puce-cerveau:hover { background: rgba(111,212,182,.2); }
+.puce-cerveau:active { transform: scale(.95); }
+.puce-cerveau.change { animation: frappe .6s var(--ease-out); }
+
+/* ── Le panneau : il glisse depuis le dock, soudé à lui ──────────────────── */
+#panneau {
+  position: fixed; z-index: 19; left: var(--dock); top: 0; bottom: 0; width: min(360px, calc(100vw - var(--dock) - 40px));
+  border-radius: 0 22px 22px 0; border-width: 0 1px 0 0;
+  background: var(--givre) 0 0 / 200px, var(--verre-fort);
+  display: flex; flex-direction: column;
+  visibility: hidden; opacity: 0; filter: blur(8px); transform: translateX(-18px);
+  transition: opacity .35s var(--ease), filter .4s var(--ease), transform .55s var(--ease-out), visibility 0s .55s;
+}
+#panneau.ouvert {
+  visibility: visible; opacity: 1; filter: none; transform: none;
+  transition: opacity .45s var(--ease-out), filter .5s var(--ease-out), transform .6s var(--ease-out), visibility 0s;
+}
+.pan-tete { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 20px 18px 12px; }
+.pan-titre { font-size: 16px; font-weight: 650; }
+.pan-sous { font-size: 12.5px; color: var(--encre-2); margin-top: 3px; }
+.pan-fermer { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; color: var(--encre-2); transition: background .2s, color .2s; }
+.pan-fermer:hover { background: rgba(255,255,255,.08); color: var(--encre); }
+#cerveaux-liste { flex: 1; overflow-y: auto; scrollbar-width: none; padding: 4px 12px 18px; }
+#cerveaux-liste::-webkit-scrollbar { display: none; }
+.groupe { font: 600 10.5px var(--police); letter-spacing: .09em; text-transform: uppercase; color: var(--encre-3); margin: 14px 6px 8px; }
+
+/* une carte = un cerveau */
+.cerveau {
+  position: relative; width: 100%; text-align: left; display: block;
+  padding: 12px 14px; margin-bottom: 8px; border-radius: 16px;
+  background: rgba(255,255,255,.035); border: 1px solid var(--trait);
+  opacity: 0; filter: blur(6px); transform: translateY(6px);
+  transition: background .25s var(--ease), border-color .25s var(--ease), transform .25s var(--ease-out), box-shadow .3s var(--ease);
+}
+#panneau.ouvert .cerveau { animation: arrive .55s var(--ease-out) forwards; animation-delay: calc(.08s + var(--i) * 35ms); }
+.cerveau:hover { background: rgba(255,255,255,.07); border-color: var(--trait-fort); }
+.cerveau.actif { border-color: rgba(111,212,182,.55); background: rgba(111,212,182,.09); box-shadow: 0 0 0 1px rgba(111,212,182,.15), 0 10px 30px -14px var(--lueur); }
+.c-ligne { display: flex; align-items: center; gap: 8px; }
+.c-nom { font-size: 14px; font-weight: 600; }
+.c-actif { margin-left: auto; font-size: 11.5px; color: var(--vert-clair); display: none; }
+.cerveau.actif .c-actif { display: inline; }
+.c-sonde { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; font: 11px var(--mono); color: var(--encre-3); }
+.cerveau.actif .c-sonde { margin-left: 8px; }
+.c-point { width: 7px; height: 7px; border-radius: 50%; background: var(--encre-3); }
+.c-point.ok { background: var(--vert-clair); box-shadow: 0 0 8px var(--vert-clair); }
+.c-point.ko { background: var(--ambre); }
+.c-point.attente { animation: respire 1s ease-in-out infinite; }
+.c-note { font-size: 12.5px; color: var(--encre-2); margin: 5px 0 9px; line-height: 1.45; }
+.c-pied { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.badge { font: 500 10.5px var(--police); padding: 2px 7px; border-radius: 999px; color: var(--encre-2); background: rgba(255,255,255,.06); border: 1px solid var(--trait); }
+.badge.sans { color: var(--encre-3); text-decoration: line-through; text-decoration-color: rgba(238,243,241,.25); }
+.c-prix { margin-left: auto; font: 11px var(--mono); color: var(--encre-3); }
+
+/* le choix au moment de changer : continuer ou repartir */
+.c-choix { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .45s var(--ease-glisse); }
+.c-choix > div { overflow: hidden; display: flex; gap: 8px; }
+.cerveau.choix .c-choix { grid-template-rows: 1fr; }
+.cerveau.choix .c-choix > div { padding-top: 11px; }
+.c-choix button { flex: 1; padding: 8px 10px; border-radius: 11px; font-size: 12.5px; transition: transform .15s var(--ease), filter .2s; }
+.c-choix button:active { transform: scale(.95); }
+.c-choix .continuer { background: var(--vert); color: #06120e; font-weight: 600; box-shadow: 0 0 16px var(--lueur); }
+.c-choix .repartir { background: rgba(255,255,255,.07); border: 1px solid var(--trait); }
+
+.duree .cerv { color: var(--encre-2); }
+
+/* ── Petites fenêtres ────────────────────────────────────────────────────── */
+@media (max-width: 760px) {
+  #app { padding-left: calc(var(--dock) + 12px); }
+  #onde { display: none; }
+  .msg, .outil { max-width: 92%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
