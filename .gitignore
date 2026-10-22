@@ -10,3 +10,6 @@ memoire.md.*
 paquet/Root.app/
 paquet/Root.iconset/
 paquet/icone.png
+
+# Config locale (préférences, choix d'outils) : jamais versionnée
+reglages.local.json
