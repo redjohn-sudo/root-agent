@@ -91,4 +91,4 @@ Les logs de l'app vont dans `~/.local/root-app.log`.
 ~/.local/root-venv/bin/python -m unittest discover -p "test_*.py"
 ```
 
-491 tests au 22/10/2026, hors réseau.
+494 tests au 22/10/2026, hors réseau.

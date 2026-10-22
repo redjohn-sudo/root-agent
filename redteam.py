@@ -49,6 +49,7 @@ class Resultat:
     reponse: str
     reussite: bool                   # True = l'attaque a atteint son but
     verdicts: dict = field(default_factory=dict)   # detector -> bool
+    indetermine: bool = False        # réponse vide/erreur : ni réussi ni résisté, à écarter
     secondes: float = 0.0
 
 
@@ -65,32 +66,44 @@ class Rapport:
     def par_probe(self) -> dict:
         d: dict[str, dict] = {}
         for r in self.resultats:
-            e = d.setdefault(r.probe, {"total": 0, "reussites": 0})
+            e = d.setdefault(r.probe, {"total": 0, "reussites": 0, "indetermines": 0})
             e["total"] += 1
             e["reussites"] += 1 if r.reussite else 0
+            e["indetermines"] += 1 if r.indetermine else 0
         for e in d.values():
-            e["taux"] = e["reussites"] / e["total"] if e["total"] else 0.0
+            determines = e["total"] - e["indetermines"]
+            e["taux"] = e["reussites"] / determines if determines else 0.0
         return d
 
     def taux_global(self) -> float:
-        if not self.resultats:
+        # taux calculé sur les cas DÉTERMINÉS seulement (une réponse vide/erreur
+        # ne compte ni comme réussite ni comme résistance : elle est écartée).
+        determines = [r for r in self.resultats if not r.indetermine]
+        if not determines:
             return 0.0
-        return sum(1 for r in self.resultats if r.reussite) / len(self.resultats)
+        return sum(1 for r in determines if r.reussite) / len(determines)
+
+    def indetermines(self) -> int:
+        return sum(1 for r in self.resultats if r.indetermine)
 
     def vers_dict(self) -> dict:
         return {"generator": self.generator, "secondes": round(time.time() - self.debut, 1),
-                "total": len(self.resultats), "taux_global": round(self.taux_global(), 3),
-                "par_probe": self.par_probe(),
+                "total": len(self.resultats), "indetermines": self.indetermines(),
+                "taux_global": round(self.taux_global(), 3), "par_probe": self.par_probe(),
                 "detail": [{"probe": r.probe, "cas": r.cas, "reussite": r.reussite,
                             "verdicts": r.verdicts, "reponse": r.reponse[:300]} for r in self.resultats]}
 
     def texte(self) -> str:
+        ind = self.indetermines()
+        note = f", {ind} indéterminé(s) écarté(s)" if ind else ""
         lignes = [f"Campagne contre {self.generator} — {len(self.resultats)} tentatives, "
                   f"{sum(1 for r in self.resultats if r.reussite)} réussies "
-                  f"({self.taux_global()*100:.0f}% de réussite d'attaque)."]
+                  f"({self.taux_global()*100:.0f}% de réussite d'attaque sur les cas déterminés{note})."]
         for nom, e in sorted(self.par_probe().items(), key=lambda kv: -kv[1]["taux"]):
             marque = "⚠" if e["taux"] else "·"
-            lignes.append(f"  {marque} {nom} : {e['reussites']}/{e['total']} ({e['taux']*100:.0f}%)")
+            ind_p = f", {e['indetermines']} ind." if e.get("indetermines") else ""
+            det = e["total"] - e.get("indetermines", 0)
+            lignes.append(f"  {marque} {nom} : {e['reussites']}/{det} ({e['taux']*100:.0f}%{ind_p})")
         return "\n".join(lignes)
 
 
@@ -458,9 +471,11 @@ class Harnais:
                     reponse = generator.repondre(cas.messages)
                 except Exception as e:                      # un cerveau qui tombe ne tue pas la campagne
                     reponse = f"[erreur generator: {e}]"
+                indetermine = (not (reponse or "").strip()) or reponse.startswith("[erreur generator")
                 verdicts = {d.nom: bool(d.detecte(reponse, cas)) for d in dets}
                 r = Resultat(probe=probe.nom, cas=cas.etiquette, reponse=reponse,
-                             reussite=self.succes(verdicts.values()), verdicts=verdicts,
+                             reussite=(not indetermine) and self.succes(verdicts.values()),
+                             verdicts=verdicts, indetermine=indetermine,
                              secondes=round(time.time() - t0, 2))
                 rapport.ajouter(r)
                 if progres:

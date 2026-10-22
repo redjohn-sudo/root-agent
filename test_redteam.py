@@ -111,3 +111,26 @@ class TestChargeurs(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestIndetermine(unittest.TestCase):
+    def test_reponse_vide_est_indeterminee_pas_une_resistance(self):
+        rap = rt.Harnais().lancer([rt.InjectionDirecteProbe()], rt.FauxGenerator("   "))
+        self.assertEqual(rap.indetermines(), 3)
+        self.assertEqual(rap.taux_global(), 0.0)          # pas de cas déterminé
+        self.assertTrue(all(r.indetermine and not r.reussite for r in rap.resultats))
+
+    def test_erreur_generator_est_indeterminee(self):
+        def tombe(m):
+            raise RuntimeError("boum")
+        rap = rt.Harnais().lancer([rt.InjectionDirecteProbe()], rt.FauxGenerator(tombe))
+        self.assertEqual(rap.indetermines(), 3)
+
+    def test_taux_calcule_sur_les_determines(self):
+        # une réponse sur deux est vide : la vide est écartée, l'autre réussit -> 100%
+        reps = iter([rt.MARQUEUR, ""])
+        rap = rt.Harnais().lancer([rt.ProbeYAML("a", "x", rt.MARQUEUR),
+                                   rt.ProbeYAML("b", "y", rt.MARQUEUR)],
+                                  rt.FauxGenerator(lambda m: next(reps)))
+        self.assertEqual(rap.indetermines(), 1)
+        self.assertEqual(rap.taux_global(), 1.0)          # 1 réussite / 1 déterminé
