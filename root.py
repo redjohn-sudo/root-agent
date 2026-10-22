@@ -103,7 +103,7 @@ TERMINAL_AUTO_ACTIF = False
 TERMINAL_AUTO: list[str] = []
 
 # Garde-fous de la boucle (Lot 1, inspiré d'Hermes).
-MAX_ETAPES = 30          # nombre maxi d'allers-retours modèle dans un seul tour
+MAX_ETAPES = 100         # nombre maxi d'allers-retours modèle dans un seul tour
 REPRISES = 4             # tentatives sur erreur réseau / surcharge du serveur
 SEUIL_TOKENS = int(memoire.BUDGET_FENETRE * memoire.SEUIL_COMPRESSION)  # compression du contexte
 
