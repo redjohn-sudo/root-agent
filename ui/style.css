@@ -288,7 +288,7 @@ kbd { font: 500 10.5px var(--mono); color: var(--encre-2); padding: 2px 6px; bor
 .pan-sous { font-size: 12.5px; color: var(--encre-2); margin-top: 3px; }
 .pan-fermer { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; color: var(--encre-2); transition: background .2s, color .2s; }
 .pan-fermer:hover { background: rgba(255,255,255,.08); color: var(--encre); }
-#cerveaux-liste { flex: 1; overflow-y: auto; scrollbar-width: none; padding: 4px 12px 18px; }
+#cerveaux-liste { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; padding: 4px 12px 18px; }
 #cerveaux-liste::-webkit-scrollbar { display: none; }
 .groupe { font: 600 10.5px var(--police); letter-spacing: .09em; text-transform: uppercase; color: var(--encre-3); margin: 14px 6px 8px; }
 
@@ -354,7 +354,7 @@ kbd { font: 500 10.5px var(--mono); color: var(--encre-2); padding: 2px 6px; bor
 [data-src="root"] { --c: var(--src-root); } [data-src="claude"] { --c: var(--src-claude); }
 [data-src="codex"] { --c: var(--src-codex); } [data-src="hermes"] { --c: var(--src-hermes); }
 
-#conv-liste { flex: 1; overflow-y: auto; scrollbar-width: none; padding: 2px 10px 10px; }
+#conv-liste { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; padding: 2px 10px 10px; }
 #conv-liste::-webkit-scrollbar { display: none; }
 .conv-vide { padding: 30px 14px; text-align: center; font-size: 12.5px; color: var(--encre-3); }
 
@@ -454,7 +454,7 @@ kbd { font: 500 10.5px var(--mono); color: var(--encre-2); padding: 2px 6px; bor
 
 /* ── Panneau « Mémoire » ─────────────────────────────────────────────────── */
 #panneau-memoire { width: min(390px, calc(100vw - var(--dock) - 40px)); }
-.mem-corps { flex: 1; overflow-y: auto; scrollbar-width: none; padding: 0 14px 18px; display: flex; flex-direction: column; gap: 12px; }
+.mem-corps { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; padding: 0 14px 18px; display: flex; flex-direction: column; gap: 12px; }
 .mem-corps::-webkit-scrollbar { display: none; }
 .jauges { display: flex; flex-direction: column; gap: 9px; padding: 12px; border-radius: 14px; background: rgba(255,255,255,.035); border: 1px solid var(--trait); }
 .j-ligne { display: flex; justify-content: space-between; gap: 10px; white-space: nowrap; font-size: 12px; color: var(--encre-2); margin-bottom: 5px; }
@@ -511,7 +511,7 @@ kbd { font: 500 10.5px var(--mono); color: var(--encre-2); padding: 2px 6px; bor
 
 /* ── Panneau « Outils » ──────────────────────────────────────────────────── */
 #panneau-outils { width: min(400px, calc(100vw - var(--dock) - 40px)); }
-.ou-corps { flex: 1; overflow-y: auto; scrollbar-width: none; padding: 0 14px 18px; display: flex; flex-direction: column; gap: 12px; }
+.ou-corps { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; padding: 0 14px 18px; display: flex; flex-direction: column; gap: 12px; }
 .ou-corps::-webkit-scrollbar { display: none; }
 .ou-mode { padding: 11px 12px; border-radius: 14px; background: rgba(255,255,255,.035); border: 1px solid var(--trait); }
 .ou-mode-tete { display: flex; justify-content: space-between; align-items: baseline; font-size: 12.5px; color: var(--encre-2); margin-bottom: 9px; }
@@ -537,12 +537,12 @@ kbd { font: 500 10.5px var(--mono); color: var(--encre-2); padding: 2px 6px; bor
 .ou-reglages label.fige { opacity: .5; cursor: default; }
 .ou-bascule { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12.5px; color: var(--encre); cursor: pointer; }
 /* l'interrupteur */
-.interr { position: relative; width: 34px; height: 20px; flex: none; border-radius: 999px; background: rgba(255,255,255,.12); border: 1px solid var(--trait); transition: background .25s var(--ease); }
+.interr { position: relative; width: 34px; height: 20px; flex: none; border-radius: 999px; background: rgba(0,0,0,.38); border: 1px solid rgba(255,255,255,.28); transition: background .25s var(--ease); }
 .interr::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--encre-2); transition: transform .25s var(--ease-out), background .25s; }
 input:checked + .interr { background: rgba(111,212,182,.3); border-color: rgba(111,212,182,.5); }
 input:checked + .interr::after { transform: translateX(14px); background: var(--vert-clair); }
 .ou-reglages input, .ou-bascule input, #ou-prefixe-ajout + input { position: absolute; opacity: 0; width: 0; height: 0; }
-.mini-interr { position: relative; width: 28px; height: 16px; border-radius: 999px; background: rgba(255,255,255,.12); border: 1px solid var(--trait); transition: background .25s; }
+.mini-interr { position: relative; width: 28px; height: 16px; border-radius: 999px; background: rgba(0,0,0,.38); border: 1px solid rgba(255,255,255,.28); transition: background .25s; }
 .mini-interr::after { content: ""; position: absolute; top: 2px; left: 2px; width: 10px; height: 10px; border-radius: 50%; background: var(--encre-2); transition: transform .25s var(--ease-out), background .25s; }
 input:checked + .mini-interr { background: rgba(111,212,182,.3); border-color: rgba(111,212,182,.5); }
 input:checked + .mini-interr::after { transform: translateX(12px); background: var(--vert-clair); }
