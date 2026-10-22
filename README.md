@@ -25,6 +25,12 @@ Installation des dépendances : voir `INSTALL.md` (plus `pywebview` pour la fen�
 - `root.py` et ses modules : le harness (mémoire de Kimi K3, autonomie et
   vérification de Codex, recherche de Claude cloud, action, sécurité, lecture,
   immunité, consentement, entendre de Claude Code).
+- `redteam.py` : le cœur de red team IA (probe / detector / generator / harnais,
+  façon garak). Probes de base (fuite de prompt, injection directe et indirecte,
+  encodage, jeu de rôle), detectors (canari, chaîne, refus, juge LLM), et chargeurs
+  de règles YAML (promptmap) et de corpus (jailbreak_llms). Attaque un vrai cerveau
+  de Root et sort un rapport chiffré. Usage sur cibles autorisées seulement.
+  Feuille de route complète : `CONCEPTION-REDTEAM.md`.
 - `README-MOTEUR.md`, `CONCEPTION-*.md`, `JOURNAL.md`, `CANAL.md` : la conception et
   la coordination des agents.
 
@@ -85,4 +91,4 @@ Les logs de l'app vont dans `~/.local/root-app.log`.
 ~/.local/root-venv/bin/python -m unittest discover -p "test_*.py"
 ```
 
-479 tests au 22/10/2026, hors réseau.
+491 tests au 22/10/2026, hors réseau.
