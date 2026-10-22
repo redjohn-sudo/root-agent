@@ -464,11 +464,17 @@ def nav():
     return _BRAVE
 
 
+def _sans_image(r):
+    """Retire la capture : les ACTIONS renvoient l'état en texte, pas une image.
+    Seuls web_voir et capture_ecran montrent une image (quand Vincent veut voir)."""
+    return {k: v for k, v in r.items() if k != "_image"} if isinstance(r, dict) else r
+
+
 def outil_web_naviguer(url: str) -> dict:
     ok, raison = securite.url_sure(url)         # bloque IP internes + métadonnées cloud
     if not ok:
         return {"texte": f"URL bloquée (sécurité) : {raison}"}
-    return nav().naviguer(url)
+    return _sans_image(nav().naviguer(url))
 
 
 def outil_web_voir() -> dict:
@@ -480,19 +486,19 @@ def outil_web_source() -> str:
 
 
 def outil_web_cliquer(cible: str) -> dict:
-    return nav().cliquer(cible)
+    return _sans_image(nav().cliquer(cible))
 
 
 def outil_web_ecrire(champ: str, texte: str) -> dict:
-    return nav().ecrire(champ, texte)
+    return _sans_image(nav().ecrire(champ, texte))
 
 
 def outil_web_entree() -> dict:
-    return nav().touche("Enter")
+    return _sans_image(nav().touche("Enter"))
 
 
 def outil_web_defiler(pixels: int = 800) -> dict:
-    return nav().defiler(pixels)
+    return _sans_image(nav().defiler(pixels))
 
 
 def outil_web_onglets() -> str:
@@ -509,15 +515,15 @@ def outil_web_nouvel_onglet(url: str = "") -> dict:
         ok, raison = securite.url_sure(url)
         if not ok:
             return {"texte": f"URL bloquée (sécurité) : {raison}"}
-    return nav().nouvel_onglet(url or "about:blank")
+    return _sans_image(nav().nouvel_onglet(url or "about:blank"))
 
 
 def outil_web_basculer(onglet: str) -> dict:
-    return nav().basculer(onglet)
+    return _sans_image(nav().basculer(onglet))
 
 
 def outil_web_fermer_onglet(onglet: str) -> dict:
-    return nav().fermer_onglet(onglet)
+    return _sans_image(nav().fermer_onglet(onglet))
 
 
 def outil_memoire_noter(categorie: str, fait: str) -> str:

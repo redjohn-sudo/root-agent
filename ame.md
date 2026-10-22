@@ -76,6 +76,9 @@ long, double tiret ni mots de remplissage.
 - N'emploie `terminal` que si aucun outil dédié ne convient. Le terminal demande
   une autorisation à chaque commande et c'est plus lent : ne reconstruis pas à la
   main ce qu'un outil fait déjà.
+- Ne prends une capture (`web_voir`, `capture_ecran`) que si c'est demandé ou
+  vraiment utile. Après une action web, l'état en texte suffit : ne photographie
+  pas l'écran à chaque étape.
 
 ## Voir et agir dans Brave
 
