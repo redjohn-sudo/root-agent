@@ -177,7 +177,7 @@ window.rootEvent = function (ev) {
   switch (ev.type) {
     case "root": ajouterRoot(ev.texte); break;
     case "toi": ajouterToi(ev.texte); break;
-    case "outil": ajouterOutil(ev.nom, ev.args); break;
+    case "outil": ajouterOutil(ev.nom, ev.args); pulserChemin(ev.nom); break;
     case "resultat": resultatOutil(ev.nom, ev.texte); break;
     case "image": bloc("capture", `<img alt="capture d'écran vue par Root" src="${ev.src}">`); break;
     case "demande": demande(ev.id, ev.nom, ev.args); break;
@@ -205,6 +205,27 @@ window.rootEvent = function (ev) {
   }
 };
 
+
+// ── Le chemin : l'icône du dock concernée pulse quand Root agit ──────────────
+const CHEMIN_ICONE = { memoire_noter: "memoire", memoire_oublier: "memoire",
+                       terminal: "terminal", executer_script: "terminal" };
+function cheminDe(nom) {
+  if (CHEMIN_ICONE[nom]) return CHEMIN_ICONE[nom];
+  if (nom.startsWith("web_") || nom === "capture_ecran") return "_nav";
+  return "outils";                       // la plupart des outils vivent sous Outils
+}
+function pulserChemin(nom) {
+  const cible = cheminDe(nom);
+  if (cible === "_nav") {                 // navigateur : un éclat sur l'en-tête
+    const t = $("#tete");
+    if (t) { t.classList.remove("nav-pulse"); void t.offsetWidth; t.classList.add("nav-pulse"); setTimeout(() => t.classList.remove("nav-pulse"), 800); }
+    return;
+  }
+  const b = $("#ic-" + cible);
+  if (!b) return;                         // icône masquée : rien
+  b.classList.remove("chemin"); void b.offsetWidth; b.classList.add("chemin");
+  setTimeout(() => b.classList.remove("chemin"), 750);
+}
 
 // ── Le dock : une icône = un panneau ─────────────────────────────────────────
 const lueur = $("#dock-lueur"), bulle = $("#bulle");

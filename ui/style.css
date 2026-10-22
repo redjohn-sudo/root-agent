@@ -813,3 +813,9 @@ body.sobre #onde, body.sobre #oreillette { }
 .px-btn:hover { background: rgba(255,255,255,.1); } .px-btn:active { transform: scale(.98); }
 .px-primaire { color: #06120e; background: var(--vert); border: 0; box-shadow: 0 0 16px var(--lueur); }
 .px-note { font-size: 11.5px; color: var(--encre-3); line-height: 1.5; margin-top: 12px; }
+
+/* Le chemin : l'icône du dock pulse quand Root utilise cette capacité */
+.dock-btn.chemin { color: var(--vert-clair); animation: chemin-pulse .75s var(--ease-out); }
+.dock-btn.chemin svg { filter: drop-shadow(0 0 9px var(--lueur)); }
+@keyframes chemin-pulse { 30% { scale: 1.2; } 100% { scale: 1; } }
+#tete.nav-pulse { box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 0 0 1.5px rgba(111,212,182,.5), 0 20px 60px -20px rgba(0,0,0,.6); transition: box-shadow .2s var(--ease); }
