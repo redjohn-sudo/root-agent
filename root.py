@@ -462,6 +462,10 @@ def outil_web_voir() -> dict:
     return nav().apercu()
 
 
+def outil_web_source() -> str:
+    return nav().source()
+
+
 def outil_web_cliquer(cible: str) -> dict:
     return nav().cliquer(cible)
 
@@ -705,6 +709,14 @@ OUTILS = {
                    "avec un nombre négatif de pixels).",
                    "parameters": {"type": "object", "properties": {
                        "pixels": {"type": "integer"}}, "required": []}},
+    },
+    "web_source": {
+        "fn": outil_web_source, "risque": "sûr",
+        "schema": {"description": "Lire le code source HTML BRUT de la page actuelle, "
+                   "avec les commentaires <!-- --> et les balises cachées. À utiliser "
+                   "pour inspecter la source (challenges web, débogage), là où web_voir "
+                   "ne montre que le texte visible.",
+                   "parameters": {"type": "object", "properties": {}, "required": []}},
     },
     "web_onglets": {
         "fn": outil_web_onglets, "risque": "sûr",

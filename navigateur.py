@@ -182,6 +182,11 @@ class Brave:
         t = self.js("document.body ? document.body.innerText : ''") or ""
         return t[:limite] + ("\n… (tronqué)" if len(t) > limite else "")
 
+    def source(self, limite=40000):
+        """Le code source HTML BRUT de la page, commentaires <!-- --> compris."""
+        h = self.js("document.documentElement ? document.documentElement.outerHTML : ''") or ""
+        return h[:limite] + ("\n… (tronqué)" if len(h) > limite else "")
+
     def capture(self):
         r = self.cmd("Page.captureScreenshot",
                      {"format": "png", "captureBeyondViewport": True})
