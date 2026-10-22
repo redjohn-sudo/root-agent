@@ -27,12 +27,12 @@ VERSION = "autonomie-locale-1"
 
 @dataclass(frozen=True)
 class Budgets:
-    outils: int = 20
-    requetes: int = 30
-    secondes: float = 600.0
-    sans_progres: int = 3
-    approches: int = 2
-    revisions_plan: int = 12
+    outils: int = 80
+    requetes: int = 100
+    secondes: float = 2400.0
+    sans_progres: int = 5
+    approches: int = 3
+    revisions_plan: int = 20
 
     def __post_init__(self):
         for nom in ("outils", "requetes", "sans_progres", "approches", "revisions_plan"):
