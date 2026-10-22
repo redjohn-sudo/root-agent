@@ -31,6 +31,7 @@ import cerveaux        # les LLM interchangeables (cerveaux.json)
 import conversations   # toutes les conversations, de tous les LLM
 import memoire_edition # voir et retoucher la mémoire durable
 import outils_reglages # le panneau Outils (couper, restreindre, autonomie)
+import outils_externes # registre des outils que Vincent a envoyés (install + détection)
 import terminal_shell  # un vrai shell (PTY) dans la fenêtre, piloté par Vincent
 import redteam         # cœur de red team IA (probe/detector/generator/harnais)
 import pentest_journal  # trace durable des campagnes de pentest
@@ -371,6 +372,19 @@ class Pont:
 
     def terminal_auto_prefixes(self, prefixes):
         return outils_reglages.terminal_auto_prefixes(prefixes)
+
+    # Outils externes (ce que Vincent a envoyé : registre dans le code)
+    def outils_externes(self):
+        return outils_externes.etat()
+
+    def outil_externe_installer(self, ident):
+        threading.Thread(target=self._installer_externe, args=(ident,), daemon=True).start()
+        self.emettre({"type": "toast", "texte": f"Installation de {ident} lancée…", "ok": True})
+        return True
+
+    def _installer_externe(self, ident):
+        r = outils_externes.installer(ident)
+        self.emettre({"type": "outil_installe", "id": ident, "ok": r["ok"], "message": r["message"]})
 
     # Mes outils (ajoutés par Vincent)
     def outil_perso_ajouter(self, nom, description, commande, argument=False, quand="", toujours_demander=True, source=""):

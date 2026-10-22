@@ -189,6 +189,10 @@ window.rootEvent = function (ev) {
     case "pentest_debut": ptDebut(ev); break;
     case "pentest_progres": ptProgres(ev); break;
     case "pentest_fini": ptFini(ev); break;
+    case "outil_installe":
+      toast(ev.message, ev.ok);
+      if (PANNEAU === "outils") chargerOutils();
+      break;
     case "retenu":
       toast(`Root a retenu : ${ev.fait}`, true, { label: "Annuler", faire: async () => {
         await api().memoire_retirer(ev.fait); toast("Retiré de sa mémoire"); } });
@@ -624,6 +628,7 @@ function rendreOutils() {
       <div class="grp-corps"><div>${outils.map(o => outilLigne(o, i++)).join("")}</div></div></section>`;
   }).join("") || '<div class="conv-vide">Aucun outil pour cette recherche.</div>';
   rendreMesOutils();
+  rendreExternes();
   brancherOutils();
 
   const av = $("#ou-avance"), ta = OU.terminal_auto;
@@ -660,6 +665,29 @@ function outilLigne(o, i) {
     <label class="ou-bascule-c" title="${o.coupe ? "Activer" : "Couper : Root ne pourra plus l'utiliser"}"><input type="checkbox" class="actif"${o.coupe ? "" : " checked"}><span class="interr"></span></label>
   </div>`;
 }
+let OU_EXT = null;
+async function rendreExternes() {
+  if (!api()) return;
+  OU_EXT = await api().outils_externes();
+  $("#ou-ext-n").textContent = `${OU_EXT.installes}/${OU_EXT.total}`;
+  const z = $("#ou-ext-corps");
+  z.innerHTML = OU_EXT.groupes.map(g => `<div class="ou-ext-groupe">${echap(g.titre)}</div>` + g.outils.map(o => {
+    let act;
+    if (o.installe) act = '<span class="ou-ext-ok">✓ installé</span>';
+    else if (o.installable) act = `<button class="ou-ext-installer" data-id="${o.id}">Installer</button>`;
+    else act = '<span class="ou-ext-manuel">à la main</span>';
+    return `<div class="ou-ext${o.installe ? " installe" : ""}"><div class="ou-ext-txt">
+      <div class="ou-ext-nom"><span class="ou-ext-pastille"></span>${echap(o.nom)}</div>
+      <div class="ou-ext-note">${echap(o.note)}</div>
+      <a class="ou-ext-src" href="#" data-url="${echap(o.source)}">${echap(o.source.replace(/^https?:\/\//, ""))}</a>
+    </div><div class="ou-ext-act">${act}</div></div>`;
+  }).join("")).join("");
+  z.querySelectorAll(".ou-ext-installer").forEach(b => b.onclick = async () => {
+    b.disabled = true; b.textContent = "…"; await api().outil_externe_installer(b.dataset.id);
+  });
+  z.querySelectorAll(".ou-ext-src").forEach(a => a.onclick = e => { e.preventDefault(); ouvrirLien(a.dataset.url); });
+}
+
 function rendreMesOutils() {
   const f = OU.familles.find(x => x.perso), liste = $("#ou-mes-liste");
   $("#ou-mes-n").textContent = f ? f.outils.length : 0;

@@ -25,6 +25,10 @@ Installation des dépendances : voir `INSTALL.md` (plus `pywebview` pour la fen�
 - `root.py` et ses modules : le harness (mémoire de Kimi K3, autonomie et
   vérification de Codex, recherche de Claude cloud, action, sécurité, lecture,
   immunité, consentement, entendre de Claude Code).
+- `outils_externes.py` : le registre, dans le code, de tous les outils que Vincent
+  veut dans Root (22 : red team, défense, offensif, briques, modèles locaux). Chacun
+  avec sa source, son rôle, sa détection et sa commande d'installation. Le panneau
+  Outils les montre avec leur état et un bouton « Installer » (pip / npm / brew).
 - `pentest_journal.py` + panneau Pentest (⌘6) : lancer une campagne d'attaques
   contre un cerveau depuis la fenêtre, répéter N fois, et garder la trace durable
   (cible, attaques, méthode, résultats) dans `~/.local/root-pentest.db`. Onglets
@@ -100,4 +104,4 @@ Les logs de l'app vont dans `~/.local/root-app.log`.
 ~/.local/root-venv/bin/python -m unittest discover -p "test_*.py"
 ```
 
-506 tests au 22/10/2026, hors réseau.
+513 tests au 22/10/2026, hors réseau.
