@@ -38,6 +38,10 @@ Installation des dépendances : voir `INSTALL.md` (plus `pywebview` pour la fen�
   Deux types de cible : un cerveau cloud, ou une **cible locale** (un modèle
   ollama + un secret caché dans son prompt système, qu'on tente d'extraire ; juge
   déterministe, 100 % hors ligne).
+- panneau Réglages (⌘8) : volontairement léger. Montrer/masquer chaque icône du
+  dock (anti-surcharge, et pour l'édition publique on masque le cyber d'un coup),
+  changer le fond, « moins d'animations », et un « à propos » (version, édition).
+  Les choix vivent dans reglages.local.json (hors git).
 - `ame.py` + panneau Âme (⌘7) : qui est Root et ses règles. Le socle gravé
   (ame.md : identité, sincérité, anti-fuite, anti-injection, stop) est montré mais
   non modifiable depuis la fenêtre ; une couche de Vincent (ton + ses propres
@@ -55,7 +59,7 @@ Installation des dépendances : voir `INSTALL.md` (plus `pywebview` pour la fen�
 ## Le dock
 
 Une icône = un panneau. Faits : **Cerveaux** (⌘1), **Conversations** (⌘2), **Mémoire** (⌘3), **Outils**
-(⌘4), **Terminal** (⌘5) et **Pentest** (⌘6) et **Âme** (⌘7). À venir : Actions, Réglages, Comparer.
+(⌘4), **Terminal** (⌘5) et **Pentest** (⌘6) et **Âme** (⌘7) et **Réglages** (⌘8). À venir : Actions, Comparer.
 
 **Terminal** (`terminal_shell.py` + `ui/vendor/xterm.js`) : un vrai shell (PTY)
 dans la fenêtre, où Vincent tape ses commandes, comme dans Ghostty. Rien à voir
@@ -87,7 +91,7 @@ par-dessus les règles de `memoire.py`) : ajouter, modifier, oublier, avec la ja
 du plafond et celle de la conversation en cours. Quand Root retient un fait seul,
 une notification propose d'annuler. `memoire.md` reste hors de GitHub.
 
-Raccourcis : ⌘1 cerveaux, ⌘2 conversations, ⌘3 mémoire, ⌘4 outils, ⌘5 terminal, ⌘6 pentest, ⌘7 âme, ⌘K palette, ⌘N nouvelle conversation, ⌘⏎ / esc pour
+Raccourcis : ⌘1 cerveaux, ⌘2 conversations, ⌘3 mémoire, ⌘4 outils, ⌘5 terminal, ⌘6 pentest, ⌘7 âme, ⌘8 réglages, ⌘K palette, ⌘N nouvelle conversation, ⌘⏎ / esc pour
 autoriser ou refuser une action de Root.
 
 ## En faire une app (Root.app)
@@ -109,4 +113,4 @@ Les logs de l'app vont dans `~/.local/root-app.log`.
 ~/.local/root-venv/bin/python -m unittest discover -p "test_*.py"
 ```
 
-520 tests au 22/10/2026, hors réseau.
+524 tests au 22/10/2026, hors réseau.

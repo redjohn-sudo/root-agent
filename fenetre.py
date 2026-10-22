@@ -55,6 +55,8 @@ def ecrire_reglages(**valeurs) -> None:
     r.update(valeurs)
     REGLAGES.write_text(json.dumps(r, ensure_ascii=False, indent=2), encoding="utf-8")
 ENTETE_MEMOIRE = "Mémoire durable de Root :"
+VERSION = "1.0"
+PANNEAUX_DOCK = [("cerveaux","Cerveaux"),("conversations","Conversations"),("memoire","Mémoire"),("outils","Outils"),("terminal","Terminal"),("pentest","Pentest"),("ame","Âme")]
 ATTENTE_MAX = 600      # secondes pour répondre à une demande d'autorisation
 CHEMINS_CMD = [Path.home() / "bin", Path.home() / ".local" / "bin", Path("/opt/homebrew/bin")]
 
@@ -402,6 +404,51 @@ class Pont:
             subprocess.Popen(["open", "-a", "Brave Browser", url])
             return True
         return False
+
+    # ── réglages ────────────────────────────────────────────────────────────
+    def reglages_etat(self):
+        r = lire_reglages()
+        masques = set(r.get("dock_masques", []))
+        return {"panneaux": [{"id": i, "label": l, "visible": i not in masques} for i, l in PANNEAUX_DOCK],
+                "moins_animations": bool(r.get("moins_animations")),
+                "fond": r.get("fond", ""),
+                "apropos": {"nom": "Root", "version": VERSION,
+                            "edition": "privée (cybersécurité incluse)",
+                            "note": "Édition publique open source pour les 42 prévue (cœur sans la cyber)."}}
+
+    def reglage_dock(self, ident, visible):
+        r = lire_reglages()
+        masques = set(r.get("dock_masques", []))
+        masques.discard(ident) if visible else masques.add(ident)
+        ecrire_reglages(dock_masques=sorted(masques))
+        return True
+
+    def reglage_animations(self, moins):
+        ecrire_reglages(moins_animations=bool(moins))
+        return True
+
+    def choisir_fond(self):
+        chemins = self.window.create_file_dialog(
+            webview.OPEN_DIALOG, allow_multiple=False,
+            file_types=("Images (*.jpg;*.jpeg;*.png)",))
+        if not chemins:
+            return None
+        src = Path(chemins[0])
+        dest = UI / "fond.local.jpg"
+        try:
+            if src.suffix.lower() in (".jpg", ".jpeg"):
+                shutil.copy(src, dest)
+            else:                                   # png → jpeg, pour rester léger
+                subprocess.run(["sips", "-s", "format", "jpeg", str(src), "--out", str(dest)],
+                               capture_output=True, timeout=20)
+            ecrire_reglages(fond="fond.local.jpg")
+            return "fond.local.jpg"
+        except (OSError, subprocess.SubprocessError):
+            return None
+
+    def reglage_fond_defaut(self):
+        ecrire_reglages(fond="")
+        return True
 
     # ── âme ─────────────────────────────────────────────────────────────────
     def ame(self):

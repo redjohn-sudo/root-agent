@@ -19,3 +19,6 @@ redteam_mandat.local.txt
 
 # Couche modulable de l'âme (local, éditable)
 ame_perso.local.json
+
+# Fond personnalisé (local)
+ui/fond.local.jpg

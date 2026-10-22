@@ -135,6 +135,35 @@
     </div>
   </aside>
 
+  <!-- Panneau « Réglages » : léger, pour désencombrer -->
+  <aside id="panneau-reglages" class="panneau verre" aria-label="Réglages" aria-hidden="true">
+    <div class="pan-tete">
+      <div>
+        <div class="pan-titre">Réglages</div>
+        <div class="pan-sous">Garder Root à ta main, épuré.</div>
+      </div>
+      <button class="pan-fermer" data-fermer aria-label="Fermer">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="rg-corps">
+      <div class="rg-section">
+        <label class="pt-lab">Le dock</label>
+        <p class="pt-mandat-aide">Montre ou cache chaque icône. Garde seulement ce dont tu te sers.</p>
+        <div id="rg-dock"></div>
+      </div>
+      <div class="rg-section">
+        <label class="pt-lab">Apparence</label>
+        <div class="rg-ligne"><span>Fond de la fenêtre</span><span class="rg-act"><button id="rg-fond">Changer…</button><button id="rg-fond-defaut" class="rg-sec">Par défaut</button></span></div>
+        <label class="rg-ligne rg-bascule"><span>Moins d'animations <em>(quand le Mac chauffe)</em></span><input type="checkbox" id="rg-anim"><span class="interr"></span></label>
+      </div>
+      <div class="rg-section">
+        <label class="pt-lab">À propos</label>
+        <div id="rg-apropos"></div>
+      </div>
+    </div>
+  </aside>
+
   <!-- Panneau « Âme » : qui est Root, et ses règles -->
   <aside id="panneau-ame" class="panneau verre" aria-label="Âme" aria-hidden="true">
     <div class="pan-tete">

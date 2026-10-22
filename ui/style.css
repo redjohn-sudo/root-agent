@@ -770,3 +770,29 @@ body.terminal #fil, body.terminal #tete { opacity: .25; pointer-events: none; }
 .am-grave.ouvert .am-grave-corps { max-height: 600px; overflow-y: auto; }
 .am-grave-corps pre { font: 11.5px/1.5 var(--police); color: var(--encre-2); white-space: pre-wrap; padding: 0 12px 11px; margin: 0; }
 .am-complete { font: 11px/1.5 var(--mono); color: var(--encre-2); white-space: pre-wrap; background: rgba(0,0,0,.3); border: 1px solid var(--trait); border-radius: 11px; padding: 11px; max-height: 320px; overflow-y: auto; }
+
+/* ── Panneau « Réglages » ────────────────────────────────────────────────── */
+#panneau-reglages { width: min(380px, calc(100vw - var(--dock) - 40px)); }
+.rg-corps { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; padding: 6px 14px 18px; }
+.rg-corps::-webkit-scrollbar { display: none; }
+.rg-section { margin-bottom: 20px; }
+.rg-ligne { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; font-size: 13px; color: var(--encre); }
+.rg-ligne em { color: var(--encre-3); font-style: normal; font-size: 11px; }
+.rg-bascule { cursor: pointer; }
+.rg-bascule input { position: absolute; opacity: 0; }
+.rg-act { display: flex; gap: 7px; flex: none; }
+.rg-act button { padding: 6px 11px; border-radius: 9px; font-size: 12px; color: var(--encre); background: rgba(111,212,182,.14); border: 1px solid rgba(111,212,182,.3); }
+.rg-act .rg-sec { color: var(--encre-2); background: rgba(255,255,255,.06); border-color: var(--trait); }
+.rg-dock-item { display: flex; align-items: center; gap: 11px; padding: 9px 11px; border-radius: 11px; background: rgba(255,255,255,.035); border: 1px solid var(--trait); margin-bottom: 6px; cursor: pointer; }
+.rg-dock-item .rg-ic { width: 20px; height: 20px; flex: none; color: var(--encre-2); }
+.rg-dock-item .rg-nom { flex: 1; font-size: 13px; }
+.rg-dock-item input { position: absolute; opacity: 0; }
+.rg-dock-item.off { opacity: .5; }
+#rg-apropos { font-size: 12.5px; color: var(--encre-2); line-height: 1.6; }
+#rg-apropos .rg-nom-v { font-size: 15px; font-weight: 650; color: var(--encre); }
+#rg-apropos .rg-edition { color: var(--vert-clair); }
+#rg-apropos .rg-note { color: var(--encre-3); font-size: 11.5px; margin-top: 6px; }
+
+/* Moins d'animations (réglage, quand le Mac chauffe) */
+body.sobre *, body.sobre *::before, body.sobre *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+body.sobre #onde, body.sobre #oreillette { }

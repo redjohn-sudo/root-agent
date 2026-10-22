@@ -21,6 +21,7 @@ const ICONES = {
   cible: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
   ame: '<path d="M12 20.5s-6.5-4-8.3-8.2C2.3 9 3.8 6 6.8 6c1.8 0 3.2 1.1 3.9 2.3h2.6C14 7.1 15.4 6 17.2 6c3 0 4.5 3 3.1 6.3C18.5 16.5 12 20.5 12 20.5z"/>',
   cadenas: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  reglages: '<path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2l-.4-2.6H8.9l-.4 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 4 12a7 7 0 0 0 .1 1.2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2l.4 2.6h4.2l.4-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6A7 7 0 0 0 19 12z"/>',
 };
 const svg = (nom, classe = "") => `<svg${classe ? ` class="${classe}"` : ""} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONES[nom]}</svg>`;
 const echap = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -214,6 +215,7 @@ const ICONES_DOCK = [
   { id: "terminal", label: "Terminal", icone: "terminal", kbd: "⌘5", ouvrir: ouvrirTerminal },
   { id: "pentest", label: "Pentest", icone: "cible", kbd: "⌘6", ouvrir: () => basculer("pentest") },
   { id: "ame", label: "Âme", icone: "ame", kbd: "⌘7", ouvrir: () => basculer("ame") },
+  { id: "reglages", label: "Réglages", icone: "reglages", kbd: "⌘8", ouvrir: () => basculer("reglages") },
 ];
 function survol(btn, label, kbd) {
   const r = btn.getBoundingClientRect(), d = $("#dock").getBoundingClientRect();
@@ -234,9 +236,11 @@ function survolLueur(btn) {
   lueur.style.transform = `translateY(${r.top - d.top + r.height / 2 - 11}px)`; lueur.classList.add("on");
 }
 function frapper(b) { b.classList.remove("frappe"); void b.offsetWidth; b.classList.add("frappe"); }
+let MASQUES = new Set();
 function construireDock() {
   const zone = $("#dock-icones"); zone.innerHTML = "";
   for (const ic of ICONES_DOCK) {
+    if (ic.id !== "reglages" && MASQUES.has(ic.id)) continue;
     const b = document.createElement("button");
     b.className = "dock-btn"; b.id = "ic-" + ic.id;
     b.innerHTML = svg(ic.icone) + '<span class="onde-clic"></span>';
@@ -256,6 +260,7 @@ const PANNEAUX = {
   outils: { el: $("#panneau-outils"), ouvrir: chargerOutils },
   pentest: { el: $("#panneau-pentest"), ouvrir: chargerPentest },
   ame: { el: $("#panneau-ame"), ouvrir: chargerAme },
+  reglages: { el: $("#panneau-reglages"), ouvrir: chargerReglages },
 };
 let PANNEAU = null;
 function ouvrirPanneau(nom) {
@@ -1006,6 +1011,7 @@ function entreesPalette(q) {
     { label: "Terminal", aide: "Un vrai shell, tu tapes dedans", icone: "terminal", kbd: "⌘5", faire: ouvrirTerminal },
     { label: "Pentest", aide: "Attaquer tes cerveaux, voir les failles", icone: "cible", kbd: "⌘6", faire: () => ouvrirPanneau("pentest") },
     { label: "Âme", aide: "Qui est Root, et ses règles", icone: "ame", kbd: "⌘7", faire: () => ouvrirPanneau("ame") },
+    { label: "Réglages", aide: "Le dock, l'apparence, à propos", icone: "reglages", kbd: "⌘8", faire: () => ouvrirPanneau("reglages") },
     ...convs,
   ];
 }
@@ -1052,6 +1058,7 @@ addEventListener("keydown", e => {
   if (cmd && e.key === "5") { e.preventDefault(); frapper($("#ic-terminal")); basculerTerminal(); return; }
   if (cmd && e.key === "6") { e.preventDefault(); frapper($("#ic-pentest")); basculer("pentest"); return; }
   if (cmd && e.key === "7") { e.preventDefault(); frapper($("#ic-ame")); basculer("ame"); return; }
+  if (cmd && e.key === "8") { e.preventDefault(); frapper($("#ic-reglages")); basculer("reglages"); return; }
   if (cmd && e.key.toLowerCase() === "n") { e.preventDefault(); nouvelleConversation(); }
 });
 
@@ -1121,6 +1128,49 @@ $("#terminal-neuf").onclick = async () => {
   termPret = true;
   await api().terminal_demarrer(TERM.cols, TERM.rows);
   TERM.focus();
+};
+
+// ── Panneau « Réglages » : léger, pour désencombrer ─────────────────────────
+let RG = null;
+function appliquerReglages(r) {
+  MASQUES = new Set((r.panneaux || []).filter(p => !p.visible).map(p => p.id));
+  construireDock();
+  document.body.classList.toggle("sobre", !!r.moins_animations);
+  const f = $("#fond");
+  if (r.fond) f.style.backgroundImage = `url("${r.fond}?t=${Date.now()}")`;
+  else f.style.backgroundImage = "";
+}
+async function chargerReglages() {
+  if (!api()) return;
+  RG = await api().reglages_etat();
+  appliquerReglages(RG);
+  rendreReglages();
+}
+function rendreReglages() {
+  if (!RG) return;
+  const icones = { cerveaux: "cerveau", conversations: "bulle", memoire: "carnet", outils: "outils", terminal: "terminal", pentest: "cible", ame: "ame" };
+  $("#rg-dock").innerHTML = RG.panneaux.map(p =>
+    `<label class="rg-dock-item${p.visible ? "" : " off"}" data-id="${p.id}">${svg(icones[p.id] || "outils", "rg-ic")}<span class="rg-nom">${echap(p.label)}</span><input type="checkbox" ${p.visible ? "checked" : ""}><span class="interr"></span></label>`).join("");
+  $("#rg-dock").querySelectorAll(".rg-dock-item").forEach(el => {
+    el.querySelector("input").onchange = async e => {
+      await api().reglage_dock(el.dataset.id, e.target.checked);
+      el.classList.toggle("off", !e.target.checked);
+      RG = await api().reglages_etat(); appliquerReglages(RG);
+    };
+  });
+  $("#rg-anim").checked = RG.moins_animations;
+  $("#rg-anim").onchange = async e => { await api().reglage_animations(e.target.checked); document.body.classList.toggle("sobre", e.target.checked); };
+  const a = RG.apropos;
+  $("#rg-apropos").innerHTML = `<div class="rg-nom-v">${echap(a.nom)} · ${echap(a.version)}</div>
+    <div>Édition <span class="rg-edition">${echap(a.edition)}</span></div>
+    <div class="rg-note">${echap(a.note)}</div>`;
+}
+$("#rg-fond").onclick = async () => {
+  const f = await api().choisir_fond();
+  if (f) { RG.fond = f; appliquerReglages(RG); toast("Fond changé"); } 
+};
+$("#rg-fond-defaut").onclick = async () => {
+  await api().reglage_fond_defaut(); RG.fond = ""; appliquerReglages(RG); toast("Fond par défaut");
 };
 
 // ── Panneau « Âme » : qui est Root, et ses règles ───────────────────────────
@@ -1337,6 +1387,7 @@ dessinerSceau();
 animerOnde();
 construireDock();
 window.addEventListener("pywebviewready", async () => {
+  try { appliquerReglages(await api().reglages_etat()); } catch (e) { /* réglages optionnels */ }
   const d = await api().cerveaux();
   CERVEAUX = d.liste; ACTIF = d.actif;
   api().pret();
