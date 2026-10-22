@@ -28,7 +28,9 @@ Installation des dépendances : voir `INSTALL.md` (plus `pywebview` pour la fen�
 - `pentest_journal.py` + panneau Pentest (⌘6) : lancer une campagne d'attaques
   contre un cerveau depuis la fenêtre, répéter N fois, et garder la trace durable
   (cible, attaques, méthode, résultats) dans `~/.local/root-pentest.db`. Onglets
-  Lancer / Historique / Failles (taux de réussite d'attaque par type).
+  Lancer / Historique / Failles (taux de réussite d'attaque par type). Un
+  « mandat de test » (system prompt, modifiable) cadre le modèle attaquant pour
+  qu'il sache travailler dans un test autorisé ; il n'est jamais envoyé à la cible.
 - `redteam.py` : le cœur de red team IA (probe / detector / generator / harnais,
   façon garak). Probes de base (fuite de prompt, injection directe et indirecte,
   encodage, jeu de rôle), detectors (canari, chaîne, refus, juge LLM), et chargeurs
@@ -95,4 +97,4 @@ Les logs de l'app vont dans `~/.local/root-app.log`.
 ~/.local/root-venv/bin/python -m unittest discover -p "test_*.py"
 ```
 
-501 tests au 22/10/2026, hors réseau.
+503 tests au 22/10/2026, hors réseau.

@@ -89,6 +89,12 @@
           <div class="ou-seg" id="pt-essais"></div></div>
         <button id="pt-go" class="pt-go">Lancer la campagne</button>
         <div id="pt-progres" class="pt-progres" hidden><div class="pt-barre"><i></i></div><span></span></div>
+        <details id="pt-mandat-bloc" class="pt-mandat">
+          <summary>Mandat de test <span id="pt-mandat-etat"></span></summary>
+          <p class="pt-mandat-aide">Ce texte est placé en system prompt devant le modèle attaquant, pour qu'il sache qu'il travaille dans un test autorisé. Il n'est jamais envoyé à la cible.</p>
+          <textarea id="pt-mandat" rows="8" spellcheck="false"></textarea>
+          <div class="pt-mandat-bas"><button id="pt-mandat-defaut" type="button">Rétablir le défaut</button><button id="pt-mandat-ok" type="button">Enregistrer</button></div>
+        </details>
       </section>
       <section class="pt-vue" id="pt-historique" hidden></section>
       <section class="pt-vue" id="pt-failles" hidden></section>

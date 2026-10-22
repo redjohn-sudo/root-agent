@@ -248,6 +248,14 @@ class Pont:
     def pentest_campagne(self, cid):
         return pentest_journal.campagne(int(cid))
 
+    def pentest_mandat(self):
+        return {"mandat": redteam.mandat(), "defaut": redteam.MANDAT_DEFAUT,
+                "perso": (redteam.mandat() != redteam.MANDAT_DEFAUT)}
+
+    def pentest_mandat_ecrire(self, texte):
+        redteam.ecrire_mandat(texte)
+        return True
+
     def pentest_supprimer(self, cid):
         pentest_journal.supprimer(int(cid))
         return True

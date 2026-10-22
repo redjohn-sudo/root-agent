@@ -13,3 +13,6 @@ paquet/icone.png
 
 # Config locale (préférences, choix d'outils) : jamais versionnée
 reglages.local.json
+
+# Mandat de test red team (local, éditable)
+redteam_mandat.local.txt

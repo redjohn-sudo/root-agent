@@ -1100,6 +1100,7 @@ async function chargerPentest() {
   PT = await api().pentest_etat();
   if (!PT_PROBES.size) PT.probes.forEach(p => PT_PROBES.add(p.id));   // tout coché au départ
   rendrePentest();
+  chargerMandat();
 }
 function rendrePentest() {
   if (!PT) return;
@@ -1116,6 +1117,21 @@ function rendrePentest() {
   $("#pt-essais").innerHTML = [1, 3, 5].map(n => `<button data-n="${n}"${n === PT_ESSAIS ? ' class="on"' : ""}>${n}×</button>`).join("");
   $("#pt-essais").querySelectorAll("button").forEach(b => b.onclick = () => { PT_ESSAIS = +b.dataset.n; rendrePentest(); });
 }
+async function chargerMandat() {
+  if (!api()) return;
+  const m = await api().pentest_mandat();
+  $("#pt-mandat").value = m.mandat;
+  $("#pt-mandat-etat").textContent = m.perso ? "· personnalisé" : "· par défaut";
+}
+$("#pt-mandat-ok").onclick = async () => {
+  await api().pentest_mandat_ecrire($("#pt-mandat").value);
+  await chargerMandat(); toast("Mandat de test enregistré");
+};
+$("#pt-mandat-defaut").onclick = async () => {
+  await api().pentest_mandat_ecrire(""); await chargerMandat(); toast("Mandat remis par défaut");
+};
+$("#pt-mandat").addEventListener("keydown", e => e.stopPropagation());
+
 $("#pt-go").onclick = async () => {
   if (PT_EN_COURS || !api()) return;
   const cid = $("#pt-cerveau").value;

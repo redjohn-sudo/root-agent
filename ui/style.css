@@ -699,3 +699,16 @@ body.terminal #fil, body.terminal #tete { opacity: .25; pointer-events: none; }
 .faille-barre i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--vert-clair), #f0b35a 60%, #f0866a); }
 .faille-sous { font-size: 10.5px; color: var(--encre-3); margin-top: 3px; }
 .pt-vide { padding: 30px 14px; text-align: center; font-size: 12.5px; color: var(--encre-3); line-height: 1.5; }
+
+/* Mandat de test, dans l'onglet Lancer */
+.pt-mandat { margin-top: 16px; border-top: 1px solid var(--trait); padding-top: 12px; }
+.pt-mandat summary { font: 600 10.5px var(--police); letter-spacing: .08em; text-transform: uppercase; color: var(--encre-3); cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; }
+.pt-mandat summary::before { content: "▸"; transition: transform .2s; color: var(--encre-3); }
+.pt-mandat[open] summary::before { transform: rotate(90deg); }
+#pt-mandat-etat { font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--vert-clair); }
+.pt-mandat-aide { font-size: 11px; color: var(--encre-3); line-height: 1.45; margin: 9px 0; }
+#pt-mandat { width: 100%; padding: 10px 11px; border-radius: 11px; font: 12px/1.5 var(--mono); color: var(--encre); background: rgba(0,0,0,.3); border: 1px solid var(--trait); outline: 0; resize: vertical; }
+#pt-mandat:focus { border-color: rgba(240,120,110,.5); }
+.pt-mandat-bas { display: flex; gap: 8px; margin-top: 8px; }
+#pt-mandat-defaut { flex: 1; padding: 8px; border-radius: 9px; font-size: 12px; color: var(--encre-2); background: rgba(255,255,255,.06); border: 1px solid var(--trait); }
+#pt-mandat-ok { flex: 1; padding: 8px; border-radius: 9px; font-size: 12px; font-weight: 600; color: #1a0f0c; background: var(--src-claude); }

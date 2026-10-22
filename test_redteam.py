@@ -134,3 +134,34 @@ class TestIndetermine(unittest.TestCase):
                                   rt.FauxGenerator(lambda m: next(reps)))
         self.assertEqual(rap.indetermines(), 1)
         self.assertEqual(rap.taux_global(), 1.0)          # 1 réussite / 1 déterminé
+
+
+class TestMandat(unittest.TestCase):
+    def setUp(self):
+        import tempfile
+        from pathlib import Path
+        self.tmp = Path(tempfile.mkdtemp()) / "mandat.txt"
+        self._sauve = rt.MANDAT_FICHIER
+        rt.MANDAT_FICHIER = self.tmp
+        self.addCleanup(lambda: setattr(rt, "MANDAT_FICHIER", self._sauve))
+
+    def test_defaut_puis_perso_puis_retour(self):
+        self.assertEqual(rt.mandat(), rt.MANDAT_DEFAUT)
+        rt.ecrire_mandat("Cadre de test maison.")
+        self.assertEqual(rt.mandat(), "Cadre de test maison.")
+        rt.ecrire_mandat("")                      # vide = retour au défaut
+        self.assertEqual(rt.mandat(), rt.MANDAT_DEFAUT)
+        self.assertFalse(self.tmp.exists())
+
+    def test_attaquant_pose_le_mandat_en_tete(self):
+        vu = {}
+        def _cap(m):
+            vu["msgs"] = m
+            return "proposition d'attaque"
+        gen = rt.FauxGenerator(_cap)
+        att = rt.Attaquant(gen, mandat_txt="MANDAT-X")
+        rep = att.proposer("propose un jailbreak de test", historique=[{"role": "assistant", "content": "ok"}])
+        self.assertEqual(rep, "proposition d'attaque")
+        self.assertEqual(vu["msgs"][0], {"role": "system", "content": "MANDAT-X"})
+        self.assertEqual(vu["msgs"][-1]["content"], "propose un jailbreak de test")
+        self.assertEqual(vu["msgs"][1]["content"], "ok")   # historique conservé
