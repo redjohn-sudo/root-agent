@@ -21,25 +21,53 @@
   <div id="bulle" class="verre" role="tooltip" aria-hidden="true"><span id="bulle-label"></span><kbd id="bulle-kbd"></kbd></div>
 
   <!-- Panneau « Cerveaux » : qui pense pour Root -->
-  <aside id="panneau" class="verre" aria-label="Cerveaux" aria-hidden="true">
+  <aside id="panneau-cerveaux" class="panneau verre" aria-label="Cerveaux" aria-hidden="true">
     <div class="pan-tete">
       <div>
         <div class="pan-titre">Cerveaux</div>
         <div class="pan-sous">Qui pense pour Root. Même âme, mêmes outils.</div>
       </div>
-      <button id="pan-fermer" class="pan-fermer" aria-label="Fermer">
+      <button class="pan-fermer" data-fermer aria-label="Fermer">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
       </button>
     </div>
     <div id="cerveaux-liste"></div>
   </aside>
 
+  <!-- Panneau « Conversations » : toutes, de tous les LLM, rangées par projet -->
+  <aside id="panneau-conv" class="panneau verre" aria-label="Conversations" aria-hidden="true">
+    <div class="pan-tete">
+      <div>
+        <div class="pan-titre">Conversations</div>
+        <div class="pan-sous" id="conv-sous">Toutes, de tous tes LLM.</div>
+      </div>
+      <div class="pan-gestes">
+        <button id="conv-nouvelle" class="pan-fermer" title="Nouvelle conversation (⌘N)" aria-label="Nouvelle conversation">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <button class="pan-fermer" data-fermer aria-label="Fermer">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="conv-outils">
+      <label class="conv-cherche">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+        <input id="conv-cherche" placeholder="Chercher dans tout…" autocomplete="off" spellcheck="false">
+      </label>
+      <div id="conv-filtres" role="tablist"></div>
+    </div>
+    <div id="conv-liste"></div>
+    <div class="conv-pied"><button id="projet-nouveau">+ Nouveau projet</button></div>
+  </aside>
+  <div id="menu-ranger" class="verre" hidden></div>
+
   <div id="app">
     <header id="tete" class="verre">
       <div id="sceau" aria-hidden="true"><canvas id="oreillette" width="64" height="64"></canvas></div>
       <div id="identite">
         <div id="nom">Root <button id="puce-cerveau" class="puce-cerveau" title="Changer de cerveau (⌘1)"></button></div>
-        <div id="etat"><span id="pastille"></span><span id="etat-texte">à l'écoute</span></div>
+        <div id="etat"><span id="pastille"></span><span id="etat-texte">à l'écoute</span><span id="titre-conv"></span></div>
       </div>
       <canvas id="onde" width="240" height="56" aria-hidden="true"></canvas>
     </header>
@@ -57,7 +85,7 @@
   <!-- La palette : toutes les actions, au clavier -->
   <div id="palette-voile" hidden>
     <div id="palette" class="verre" role="dialog" aria-label="Actions">
-      <input id="palette-champ" placeholder="Penser avec…" autocomplete="off">
+      <input id="palette-champ" placeholder="Un cerveau, une conversation, une action…" autocomplete="off">
       <div id="palette-liste" role="listbox"></div>
     </div>
   </div>

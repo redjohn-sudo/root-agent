@@ -18,6 +18,7 @@ from __future__ import annotations
 import base64
 import json
 import os
+import shlex
 import shutil
 import subprocess
 import tempfile
@@ -27,6 +28,7 @@ from pathlib import Path
 import webview
 
 import cerveaux        # les LLM interchangeables (cerveaux.json)
+import conversations   # toutes les conversations, de tous les LLM
 import root            # le moteur : boucle, outils, mémoire, sécurité
 
 ICI = Path(__file__).parent
@@ -113,6 +115,8 @@ class Pont:
         self._accords: dict[int, dict] = {}
         self._n = 0
         self.nouvelle()
+        # premier balayage des conversations en fond (1 à 2 s la première fois)
+        threading.Thread(target=self._indexer, daemon=True).start()
 
     # ── appelé par le JS ────────────────────────────────────────────────────
     def pret(self):
@@ -198,6 +202,9 @@ class Pont:
         return False
 
     def nouvelle(self):
+        self.conv_id = conversations.nouvel_id()   # sauvegardée dès le premier message
+        self.origine = ""                           # conversation d'un autre outil reprise ici
+        self.lecture = None                         # conversation d'un autre outil affichée
         self.messages = [{"role": "system", "content": root.AME}]
         souvenirs = root.memoire.memoire_pour_prompt()
         if souvenirs.strip():
@@ -205,10 +212,137 @@ class Pont:
                                   "content": "Mémoire durable de Root :\n" + souvenirs})
         return True
 
+    # ── conversations ───────────────────────────────────────────────────────
+    def conversations(self):
+        d = conversations.lister()
+        d["actuelle"] = self.lecture["cle"] if self.lecture else f"root:{self.conv_id}"
+        self._liste = {e["cle"]: e for e in d["liste"]}
+        return d
+
+    def chercher_conversations(self, requete):
+        return conversations.chercher(requete, list(getattr(self, "_liste", {}) or {}))
+
+    def ouvrir_conversation(self, cle):
+        if self.occupe.locked():
+            self.emettre({"type": "toast", "texte": "Attends que Root ait fini de répondre.", "ok": False})
+            return None
+        try:
+            r = conversations.ouvrir(cle)
+        except (OSError, ValueError, KeyError) as e:
+            self.emettre({"type": "toast", "texte": f"Conversation illisible : {e}", "ok": False})
+            return None
+        entree = getattr(self, "_liste", {}).get(cle, {})
+        titre = entree.get("titre", "Sans titre")
+        if r["source"] == "root":
+            brut = r["brut"]
+            self.messages = brut.get("messages") or [{"role": "system", "content": root.AME}]
+            if self.messages and self.messages[0].get("role") == "system":
+                self.messages[0]["content"] = root.AME          # l'âme à jour
+            self.conv_id, self.origine, self.lecture = cle.split(":", 1)[1], brut.get("origine", ""), None
+            c = cerveaux.par_id(brut.get("cerveau", ""))
+            if c and c["id"] != self.cerveau["id"] and cerveaux.cle(c):
+                self.cerveau = c
+                root.CERVEAU_COURANT = c
+                ecrire_reglages(cerveau=c["id"])
+                self.emettre({"type": "cerveau", "id": c["id"], "nom": c["nom"]})
+            return {"cle": cle, "source": "root", "titre": titre, "fil": r["fil"], "lecture": False}
+        self.lecture = {"cle": cle, "titre": titre, "fil": r["fil"], "cwd": r.get("cwd", ""),
+                        "profil": r.get("profil", ""), "projet": entree.get("projet", "")}
+        return {"cle": cle, "source": r["source"], "titre": titre, "fil": r["fil"], "lecture": True,
+                "cwd": r.get("cwd", ""), "date": entree.get("date", 0), "cerveau": entree.get("cerveau", ""),
+                "rouvrir": conversations.commande_reprise(cle, self.lecture) is not None}
+
+    def continuer_conversation(self):
+        """« Continuer avec Root » : la conversation lue devient une conversation Root."""
+        if not self.lecture or self.occupe.locked():
+            return False
+        self._reprendre()
+        self.emettre({"type": "toast", "ok": True, "texte": f"Root reprend la conversation avec {self.cerveau['nom']}"})
+        return True
+
+    def rouvrir_conversation(self, cle):
+        """Rouvre la session dans son outil d'origine, dans un nouveau Terminal."""
+        info = self.lecture if self.lecture and self.lecture["cle"] == cle else {}
+        cmd = conversations.commande_reprise(cle, info)
+        if cmd is None:
+            return False
+        script = Path(tempfile.mkdtemp(prefix="root-reprise-")) / "reprendre.command"
+        cwd = info.get("cwd") or str(Path.home())
+        script.write_text(f"#!/bin/zsh -l\ncd {shlex.quote(cwd)} 2>/dev/null\nexec {shlex.join(cmd)}\n",
+                          encoding="utf-8")
+        script.chmod(0o700)
+        subprocess.Popen(["open", "-a", "Terminal", str(script)])
+        self.emettre({"type": "toast", "ok": True, "texte": f"Ouvert dans {conversations.SOURCES[cle.split(':')[0]]}"})
+        return True
+
+    def renommer_conversation(self, cle, titre):
+        if titre.strip():
+            conversations.renommer(cle, titre)
+        return True
+
+    def ranger_conversation(self, cle, projet):
+        conversations.ranger(cle, projet)
+        return True
+
+    def epingler_conversation(self, cle, oui):
+        conversations.epingler(cle, oui)
+        return True
+
+    def supprimer_conversation(self, cle):
+        """Root : supprimée pour de bon. Autres outils : seulement masquée ici."""
+        source, ident = cle.split(":", 1)
+        if source == "root":
+            if ident == self.conv_id:
+                self.nouvelle()
+            conversations.supprimer_root(ident)
+        else:
+            conversations.masquer(cle)
+        return True
+
+    def creer_projet(self, nom):
+        return conversations.creer_projet(nom)
+
+    def renommer_projet(self, ident, nom):
+        conversations.renommer_projet(ident, nom)
+        return True
+
+    def supprimer_projet(self, ident):
+        conversations.supprimer_projet(ident)
+        return True
+
+    def _reprendre(self):
+        lec = self.lecture
+        self.nouvelle()
+        self.origine = lec["cle"]
+        self.messages.append({"role": "system",
+                              "content": conversations.contexte_reprise(lec["cle"], lec["titre"], lec["fil"])})
+        cle = f"root:{self.conv_id}"
+        conversations.renommer(cle, lec["titre"])
+        if lec.get("projet"):
+            conversations.ranger(cle, lec["projet"])
+        self._sauver(force=True)
+
+    def _sauver(self, force=False):
+        if force or any(m.get("role") == "user" for m in self.messages):
+            try:
+                conversations.sauver_root(self.conv_id, self.messages, self.cerveau["id"], self.origine)
+            except OSError as e:
+                self.emettre({"type": "toast", "texte": f"Sauvegarde impossible : {e}", "ok": False})
+
+    def _indexer(self):
+        try:
+            conversations.balayer()
+            self.emettre({"type": "conversations"})
+        except Exception:
+            pass
+
     # ── moteur ──────────────────────────────────────────────────────────────
     def _tour(self, texte):
         try:
+            if self.lecture:                         # on écrit sous une conversation d'un autre outil
+                self._reprendre()
             self.messages.append({"role": "user", "content": texte})
+            self._sauver()
             if not cerveaux.cle(self.cerveau):
                 self.emettre({"type": "root", "texte":
                               f"Pas de clé pour {self.cerveau['nom']} : choisis un autre cerveau."})
@@ -217,6 +351,7 @@ class Pont:
         except Exception as e:                      # réseau, API… la fenêtre ne meurt pas
             self.emettre({"type": "arret", "texte": f"Erreur : {root.securite.rediger_secrets(str(e))}"})
         finally:
+            self._sauver()
             self.emettre({"type": "etat", "valeur": "prete"})
             self.occupe.release()
 

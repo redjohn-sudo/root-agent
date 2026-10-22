@@ -30,10 +30,16 @@ Installation des dépendances : voir `INSTALL.md` (plus `pywebview` pour la fen�
 
 ## Le dock
 
-Une icône = un panneau. Fait : **Cerveaux** (⌘1). À venir, un par un :
-Conversations, Mémoire, Outils, Âme, Actions, Réglages, et Comparer.
+Une icône = un panneau. Faits : **Cerveaux** (⌘1) et **Conversations** (⌘2).
+À venir, un par un : Mémoire, Outils, Âme, Actions, Réglages, et Comparer.
 
-Raccourcis : ⌘1 cerveaux, ⌘K palette, ⌘N nouvelle conversation, ⌘⏎ / esc pour
+**Conversations** rassemble celles de Root, Claude Code, Codex et Hermes
+(`conversations.py`), rangées par projet, cherchables dans tout leur texte. Les
+fichiers des autres outils sont seulement lus ; titres, projets et épingles vivent
+dans `~/.local/root-conversations/meta.json`. Une conversation d'un autre outil
+s'ouvre en lecture : « Continuer avec Root » ou « Rouvrir » dans son outil.
+
+Raccourcis : ⌘1 cerveaux, ⌘2 conversations, ⌘K palette, ⌘N nouvelle conversation, ⌘⏎ / esc pour
 autoriser ou refuser une action de Root.
 
 ## Tests
@@ -42,4 +48,4 @@ autoriser ou refuser une action de Root.
 ~/.local/root-venv/bin/python -m unittest discover -p "test_*.py"
 ```
 
-437 tests au 22/10/2026, hors réseau.
+450 tests au 22/10/2026, hors réseau.
