@@ -91,6 +91,15 @@ def charger_cle():
 # pour qu'elle demande à chaque action qui modifie quoi que ce soit.
 AUTONOMIE = "large"
 
+# Pilotés par le panneau Outils de la fenêtre (outils_reglages.py). Par défaut,
+# rien n'est coupé, rien n'est rendu plus strict, et l'auto-exécution terminal
+# est ÉTEINTE : aucune commande ne saute la demande d'accord tant que Vincent
+# ne l'a pas activée lui-même et n'a pas listé ce qu'il autorise.
+OUTILS_COUPES: set[str] = set()
+OUTILS_STRICTS: set[str] = set()
+TERMINAL_AUTO_ACTIF = False
+TERMINAL_AUTO: list[str] = []
+
 # Garde-fous de la boucle (Lot 1, inspiré d'Hermes).
 MAX_ETAPES = 30          # nombre maxi d'allers-retours modèle dans un seul tour
 REPRISES = 4             # tentatives sur erreur réseau / surcharge du serveur
@@ -877,7 +886,8 @@ VERBES_DANGEREUX = ("rm ", "rmdir", "mv ", "dd ", "mkfs", ">", ">>", "shutdown",
 def schema_pour_deepseek():
     """Traduit notre table d'outils dans le format attendu par l'API."""
     return [{"type": "function",
-             "function": {"name": nom, **o["schema"]}} for nom, o in OUTILS.items()]
+             "function": {"name": nom, **o["schema"]}} for nom, o in OUTILS.items()
+            if nom not in OUTILS_COUPES]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -886,6 +896,8 @@ def schema_pour_deepseek():
 
 def doit_demander(nom, args):
     o = OUTILS[nom]
+    if nom in OUTILS_STRICTS:           # Vincent a demandé une confirmation sur cet outil
+        return True
     if o["risque"] == "sûr":
         return False
     if o["risque"] == "systeme":
@@ -900,11 +912,23 @@ def doit_demander(nom, args):
         return True
     if nom == "terminal":
         cmd = args.get("commande", "")
+        # Auto-exécution : seulement si Vincent l'a activée, en autonomie large, et
+        # si la commande commence par un préfixe qu'il a lui-même autorisé. C'est
+        # le SEUL endroit où une commande terminal peut sauter la demande.
+        if AUTONOMIE == "large" and TERMINAL_AUTO_ACTIF and _terminal_autorise(cmd):
+            return False
         dangereuse = any(v in cmd for v in VERBES_DANGEREUX)
         if AUTONOMIE == "large":
             return dangereuse           # large : on ne demande que si ça peut casser
         return True                     # prudente : on demande pour tout le terminal
     return True
+
+
+def _terminal_autorise(cmd: str) -> bool:
+    """La commande commence-t-elle par un des préfixes autorisés par Vincent ?
+    Comparaison sur la commande nettoyée ; un préfixe vide n'autorise rien."""
+    c = cmd.strip()
+    return any(p.strip() and c.startswith(p.strip()) for p in TERMINAL_AUTO)
 
 
 def demander(nom, args):

@@ -88,7 +88,42 @@
     </div>
   </aside>
 
+  <!-- Panneau « Outils » : ce que Root a le droit de faire -->
+  <aside id="panneau-outils" class="panneau verre" aria-label="Outils" aria-hidden="true">
+    <div class="pan-tete">
+      <div>
+        <div class="pan-titre">Outils</div>
+        <div class="pan-sous">Ce que Root a le droit de faire.</div>
+      </div>
+      <button class="pan-fermer" data-fermer aria-label="Fermer">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="ou-corps">
+      <div class="ou-mode">
+        <div class="ou-mode-tete"><span>Autonomie</span><span id="ou-mode-aide" class="j-val"></span></div>
+        <div id="ou-mode-choix" class="ou-seg"></div>
+      </div>
+      <div class="ou-pre" id="ou-pre"></div>
+      <div id="ou-familles"></div>
+      <section class="grp projet ou-avance" id="ou-avance" data-cle="o:avance">
+        <button class="grp-tete">
+          <svg viewBox="0 0 24 24" class="chevron" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m7 10 5 5 5-5"/></svg>
+          <span class="grp-nom">Commandes sans confirmation</span>
+          <span class="grp-n" id="ou-auto-etat">éteint</span>
+        </button>
+        <div class="grp-corps"><div class="ou-avance-corps">
+          <div class="ou-avertit">En autonomie large, Root lance sans te demander les commandes du terminal qui commencent par un préfixe que <b>tu</b> ajoutes ici. Éteint par défaut. Pour tes labos et tes CTF ; à n'activer que sur des cibles autorisées.</div>
+          <label class="ou-bascule"><span>Activer l'auto-exécution</span><input type="checkbox" id="ou-auto-actif"><span class="interr"></span></label>
+          <div class="ou-prefixes" id="ou-prefixes"></div>
+          <form id="ou-prefixe-ajout" autocomplete="off"><input id="ou-prefixe-champ" placeholder="ex. nmap, ffuf, curl http://10.0.0.1 …" spellcheck="false"><button type="submit">Ajouter</button></form>
+        </div></div>
+      </section>
+    </div>
+  </aside>
+
   <div id="app">
+
     <header id="tete" class="verre">
       <div id="sceau" aria-hidden="true"><canvas id="oreillette" width="64" height="64"></canvas></div>
       <div id="identite">

@@ -16,6 +16,7 @@ const ICONES = {
   chevron: '<path d="m7 10 5 5 5-5"/>',
   crayon: '<path d="M14.5 5.5l4 4L9 19H5v-4z"/>',
   carnet: '<path d="M6.5 4.5h10A1.5 1.5 0 0 1 18 6v13.5H8a1.5 1.5 0 0 1-1.5-1.5zM6.5 18A1.5 1.5 0 0 1 8 16.5h10M10 8.5h4.5"/>',
+  outils: '<path d="M10 6.5a3.5 3.5 0 0 0-4.8 4.3l-1.7 1.7 2 2 1.7-1.7A3.5 3.5 0 0 0 11.5 8M13.5 13l4.5 4.5a1.4 1.4 0 0 0 2-2L15.5 11"/>',
 };
 const svg = (nom, classe = "") => `<svg${classe ? ` class="${classe}"` : ""} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONES[nom]}</svg>`;
 const echap = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -195,6 +196,7 @@ const ICONES_DOCK = [
   { id: "cerveaux", label: "Cerveaux", icone: "cerveau", kbd: "⌘1", ouvrir: () => basculer("cerveaux") },
   { id: "conversations", label: "Conversations", icone: "bulle", kbd: "⌘2", ouvrir: () => basculer("conversations") },
   { id: "memoire", label: "Mémoire", icone: "carnet", kbd: "⌘3", ouvrir: () => basculer("memoire") },
+  { id: "outils", label: "Outils", icone: "outils", kbd: "⌘4", ouvrir: () => basculer("outils") },
 ];
 function survol(btn, label, kbd) {
   const r = btn.getBoundingClientRect(), d = $("#dock").getBoundingClientRect();
@@ -234,6 +236,7 @@ const PANNEAUX = {
   cerveaux: { el: $("#panneau-cerveaux"), ouvrir: () => { rendreCerveaux(); sonderTout(); } },
   conversations: { el: $("#panneau-conv"), ouvrir: () => { rendreConversations(); chargerConversations(); setTimeout(() => cherche.focus(), 80); } },
   memoire: { el: $("#panneau-memoire"), ouvrir: () => { rendreMemoire(); chargerMemoire(); setTimeout(() => champFait.focus(), 80); } },
+  outils: { el: $("#panneau-outils"), ouvrir: chargerOutils },
 };
 let PANNEAU = null;
 function ouvrirPanneau(nom) {
@@ -578,6 +581,91 @@ cherche.addEventListener("keydown", e => {
   }
 });
 
+// ── Panneau « Outils » : ce que Root a le droit de faire ─────────────────────
+let OU = null;
+async function chargerOutils() {
+  if (!api()) return;
+  OU = await api().outils();
+  rendreOutils();
+}
+function rendreOutils() {
+  if (!OU) return;
+  const seg = $("#ou-mode-choix");
+  seg.innerHTML = [["prudente", "Prudente"], ["large", "Large"]].map(([id, n]) =>
+    `<button data-m="${id}"${OU.autonomie === id ? ' class="on"' : ""}>${n}</button>`).join("");
+  seg.querySelectorAll("button").forEach(b => b.onclick = async () => { await api().outils_autonomie(b.dataset.m); chargerOutils(); });
+  $("#ou-mode-aide").textContent = OU.autonomie === "large"
+    ? "Root agit seule, demande avant ce qui casse ou sort" : "Root demande avant chaque action";
+  $("#ou-pre").innerHTML = OU.prereglages.map(p =>
+    `<button data-p="${p.id}"${OU.actif === p.id ? ' class="on"' : ""} title="${echap(p.aide)}">${echap(p.nom)}</button>`).join("");
+  $("#ou-pre").querySelectorAll("button").forEach(b => b.onclick = async () => { await api().outils_prereglage(b.dataset.p); chargerOutils(); });
+
+  let i = 0;
+  $("#ou-familles").innerHTML = OU.familles.map(f => {
+    const cle = "o:" + f.titre, plie = plies.has(cle);
+    const actifs = f.outils.filter(o => !o.coupe).length;
+    return `<section class="grp projet${plie ? " plie" : ""}" data-cle="${echap(cle)}">
+      <button class="grp-tete">${svg("chevron", "chevron")}<span class="grp-nom">${echap(f.titre)}</span><span class="grp-n">${actifs}/${f.outils.length}</span></button>
+      <div class="grp-corps"><div>${f.outils.map(o => outilLigne(o, i++)).join("")}</div></div></section>`;
+  }).join("");
+
+  const av = $("#ou-avance"), ta = OU.terminal_auto;
+  av.classList.toggle("actif", ta.actif);
+  av.classList.toggle("plie", !plies.has("o:avance") ? !ta.actif && !av.classList.contains("force-ouvert") : true);
+  av.toggleAttribute("data-eteint", !ta.actif);
+  $("#ou-auto-etat").textContent = ta.actif ? `${ta.prefixes.length} autorisée${ta.prefixes.length > 1 ? "s" : ""}` : "éteint";
+  $("#ou-auto-actif").checked = ta.actif;
+  $("#ou-prefixes").innerHTML = ta.prefixes.map((p, k) =>
+    `<div class="ou-prefixe"><code>${echap(p)}</code><button data-k="${k}" title="Retirer">${svg("croix")}</button></div>`).join("");
+  $("#ou-prefixes").querySelectorAll("button").forEach(b => b.onclick = async () => {
+    const reste = ta.prefixes.filter((_, k) => k !== +b.dataset.k);
+    await api().terminal_auto_prefixes(reste); chargerOutils();
+  });
+  brancherGroupes("#ou-familles");
+}
+function outilLigne(o, i) {
+  const fige = o.verrouille_demande;
+  return `<div class="ou-outil${o.coupe ? " coupe" : ""}" style="--i:${i}" data-id="${o.id}">
+    <div class="ou-txt">
+      <div class="ou-nom">${echap(o.id)}<span class="ou-risque" data-r="${o.risque}" title="${echap(o.risque_aide)}">${echap(o.risque_nom)}</span></div>
+      <div class="ou-desc">${echap(o.description)}</div>
+      <div class="ou-reglages">
+        <label class="${fige ? "fige" : ""}" title="${fige ? "Cet outil demande toujours, c'est un garde-fou" : "Demander mon accord à chaque fois"}">
+          <input type="checkbox" class="strict"${o.strict || fige ? " checked" : ""}${fige ? " disabled" : ""}><span class="mini-interr"></span>Demander</label>
+      </div>
+    </div>
+    <label title="${o.coupe ? "Activer" : "Couper : Root ne pourra plus l'utiliser"}"><input type="checkbox" class="actif"${o.coupe ? "" : " checked"}><span class="interr"></span></label>
+  </div>`;
+}
+function brancherGroupes(sel) {
+  document.querySelectorAll(`${sel} .grp, #ou-avance`).forEach(g => {
+    const tete = g.querySelector(".grp-tete");
+    tete.onclick = () => {
+      g.classList.toggle("plie");
+      g.classList.contains("plie") ? plies.add(g.dataset.cle) : plies.delete(g.dataset.cle);
+      memoriserPlies();
+    };
+  });
+  document.querySelectorAll(`${sel} .ou-outil`).forEach(el => {
+    const id = el.dataset.id;
+    el.querySelector(".actif").onchange = async e => { await api().outil_basculer(id, !e.target.checked); chargerOutils(); };
+    const st = el.querySelector(".strict:not(:disabled)");
+    if (st) st.onchange = async e => { await api().outil_strict(id, e.target.checked); };
+  });
+}
+$("#ou-auto-actif").onchange = async e => {
+  if (e.target.checked) $("#ou-avance").classList.add("force-ouvert");
+  await api().terminal_auto_activer(e.target.checked); chargerOutils();
+};
+$("#ou-prefixe-ajout").addEventListener("submit", async e => {
+  e.preventDefault();
+  const champ = $("#ou-prefixe-champ"), v = champ.value.trim();
+  if (!v || !OU) return;
+  await api().terminal_auto_prefixes([...OU.terminal_auto.prefixes, v]);
+  champ.value = ""; chargerOutils();
+});
+$("#ou-prefixe-champ").addEventListener("keydown", e => e.stopPropagation());
+
 // ── Panneau « Mémoire » : ce que Root sait de toi ────────────────────────────
 const listeM = $("#mem-liste"), champFait = $("#mem-fait"), retourM = $("#mem-retour");
 let MEM = { categories: [], taille: 0, plafond: 8000, proposees: [] }, CAT = null, NEUF = null;
@@ -790,6 +878,7 @@ function entreesPalette(q) {
     { label: "Nouvelle conversation", aide: "Repartir de zéro", icone: "plus", kbd: "⌘N", faire: nouvelleConversation },
     { label: "Toutes les conversations", aide: "Par projet, de tous tes LLM", icone: "bulle", kbd: "⌘2", faire: () => ouvrirPanneau("conversations") },
     { label: "Mémoire", aide: "Ce que Root sait de toi", icone: "carnet", kbd: "⌘3", faire: () => ouvrirPanneau("memoire") },
+    { label: "Outils", aide: "Ce que Root a le droit de faire", icone: "outils", kbd: "⌘4", faire: () => ouvrirPanneau("outils") },
     ...convs,
   ];
 }
@@ -831,6 +920,7 @@ addEventListener("keydown", e => {
   if (cmd && e.key === "1") { e.preventDefault(); frapper($("#ic-cerveaux")); basculer("cerveaux"); return; }
   if (cmd && e.key === "2") { e.preventDefault(); frapper($("#ic-conversations")); basculer("conversations"); return; }
   if (cmd && e.key === "3") { e.preventDefault(); frapper($("#ic-memoire")); basculer("memoire"); return; }
+  if (cmd && e.key === "4") { e.preventDefault(); frapper($("#ic-outils")); basculer("outils"); return; }
   if (cmd && e.key.toLowerCase() === "n") { e.preventDefault(); nouvelleConversation(); }
 });
 

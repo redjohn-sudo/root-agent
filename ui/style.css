@@ -508,3 +508,60 @@ kbd { font: 500 10.5px var(--mono); color: var(--encre-2); padding: 2px 6px; bor
 .toast.geste .t-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .toast.geste button { flex: none; font-size: 12.5px; color: var(--vert-clair); padding: 3px 9px; border-radius: 8px; background: rgba(111,212,182,.12); }
 .toast.geste button:hover { background: rgba(111,212,182,.22); }
+
+/* ── Panneau « Outils » ──────────────────────────────────────────────────── */
+#panneau-outils { width: min(400px, calc(100vw - var(--dock) - 40px)); }
+.ou-corps { flex: 1; overflow-y: auto; scrollbar-width: none; padding: 0 14px 18px; display: flex; flex-direction: column; gap: 12px; }
+.ou-corps::-webkit-scrollbar { display: none; }
+.ou-mode { padding: 11px 12px; border-radius: 14px; background: rgba(255,255,255,.035); border: 1px solid var(--trait); }
+.ou-mode-tete { display: flex; justify-content: space-between; align-items: baseline; font-size: 12.5px; color: var(--encre-2); margin-bottom: 9px; }
+.ou-seg { display: flex; gap: 4px; padding: 3px; border-radius: 11px; background: rgba(0,0,0,.25); }
+.ou-seg button { flex: 1; padding: 7px; border-radius: 8px; font-size: 12.5px; color: var(--encre-2); transition: background .25s var(--ease), color .25s; }
+.ou-seg button.on { background: rgba(111,212,182,.16); color: var(--encre); box-shadow: inset 0 0 0 1px rgba(111,212,182,.3); }
+.ou-pre { display: flex; gap: 6px; flex-wrap: wrap; }
+.ou-pre button { padding: 5px 11px; border-radius: 999px; font-size: 12px; color: var(--encre-2); background: rgba(255,255,255,.04); border: 1px solid var(--trait); transition: background .2s, color .2s, border-color .2s; }
+.ou-pre button:hover { background: rgba(255,255,255,.08); }
+.ou-pre button.on { color: var(--encre); border-color: rgba(111,212,182,.5); background: rgba(111,212,182,.13); }
+#ou-familles .grp { margin-top: 0; }
+.ou-outil { display: flex; align-items: flex-start; gap: 10px; padding: 9px 10px; border-radius: 12px; transition: background .2s var(--ease), opacity .3s; animation: arrive .4s var(--ease-out) both; animation-delay: calc(var(--i,0) * 14ms); }
+.ou-outil:hover { background: rgba(255,255,255,.05); }
+.ou-outil.coupe { opacity: .45; }
+.ou-txt { flex: 1; min-width: 0; }
+.ou-nom { font: 13px var(--mono); color: var(--encre); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ou-risque { font: 500 10px var(--police); padding: 1px 7px; border-radius: 999px; color: var(--encre-2); background: rgba(255,255,255,.06); border: 1px solid var(--trait); }
+.ou-risque[data-r="systeme"], .ou-risque[data-r="modifie"], .ou-risque[data-r="variable"] { color: var(--ambre); border-color: rgba(240,179,90,.35); }
+.ou-risque[data-r="web"] { color: var(--src-hermes); border-color: rgba(169,144,242,.35); }
+.ou-desc { font-size: 11.5px; color: var(--encre-3); margin-top: 3px; line-height: 1.45; }
+.ou-reglages { display: flex; align-items: center; gap: 12px; margin-top: 7px; }
+.ou-reglages label { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--encre-2); cursor: pointer; }
+.ou-reglages label.fige { opacity: .5; cursor: default; }
+.ou-bascule { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12.5px; color: var(--encre); cursor: pointer; }
+/* l'interrupteur */
+.interr { position: relative; width: 34px; height: 20px; flex: none; border-radius: 999px; background: rgba(255,255,255,.12); border: 1px solid var(--trait); transition: background .25s var(--ease); }
+.interr::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--encre-2); transition: transform .25s var(--ease-out), background .25s; }
+input:checked + .interr { background: rgba(111,212,182,.3); border-color: rgba(111,212,182,.5); }
+input:checked + .interr::after { transform: translateX(14px); background: var(--vert-clair); }
+.ou-reglages input, .ou-bascule input, #ou-prefixe-ajout + input { position: absolute; opacity: 0; width: 0; height: 0; }
+.mini-interr { position: relative; width: 28px; height: 16px; border-radius: 999px; background: rgba(255,255,255,.12); border: 1px solid var(--trait); transition: background .25s; }
+.mini-interr::after { content: ""; position: absolute; top: 2px; left: 2px; width: 10px; height: 10px; border-radius: 50%; background: var(--encre-2); transition: transform .25s var(--ease-out), background .25s; }
+input:checked + .mini-interr { background: rgba(111,212,182,.3); border-color: rgba(111,212,182,.5); }
+input:checked + .mini-interr::after { transform: translateX(12px); background: var(--vert-clair); }
+/* avancé : commandes sans confirmation */
+.ou-avance .grp-n { color: var(--encre-3); }
+.ou-avance.actif .grp-n { color: var(--vert-clair); }
+.ou-avance-corps { padding: 4px 10px 10px; display: flex; flex-direction: column; gap: 11px; }
+.ou-avertit { font-size: 11.5px; color: var(--encre-2); line-height: 1.5; padding: 9px 11px; border-radius: 11px; background: rgba(240,179,90,.08); border: 1px solid rgba(240,179,90,.28); }
+.ou-avertit b { color: var(--ambre); }
+.ou-prefixes { display: flex; flex-direction: column; gap: 5px; }
+.ou-prefixes:empty::before { content: "Aucune commande autorisée. Root demande pour tout."; font-size: 11.5px; color: var(--encre-3); font-style: italic; }
+.ou-prefixe { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 9px; background: rgba(0,0,0,.22); border: 1px solid var(--trait); }
+.ou-prefixe code { flex: 1; font: 12px var(--mono); color: var(--encre); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ou-prefixe button { width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; color: var(--encre-3); transition: background .2s, color .2s; }
+.ou-prefixe button:hover { background: rgba(240,179,90,.15); color: var(--ambre); }
+.ou-prefixe svg { width: 13px; height: 13px; }
+#ou-prefixe-ajout { display: flex; gap: 7px; }
+#ou-prefixe-champ { flex: 1; padding: 7px 10px; border-radius: 9px; font: 12px var(--mono); color: var(--encre); background: rgba(0,0,0,.25); border: 1px solid var(--trait); outline: 0; transition: border-color .2s; }
+#ou-prefixe-champ:focus { border-color: rgba(111,212,182,.5); }
+#ou-prefixe-ajout button { padding: 0 13px; border-radius: 9px; font-size: 12.5px; color: var(--encre-2); background: rgba(255,255,255,.06); border: 1px solid var(--trait); transition: background .2s, color .2s; }
+#ou-prefixe-ajout button:hover { color: var(--encre); background: rgba(255,255,255,.1); }
+.ou-avance[data-eteint] .ou-prefixes, .ou-avance[data-eteint] #ou-prefixe-ajout { opacity: .4; pointer-events: none; }

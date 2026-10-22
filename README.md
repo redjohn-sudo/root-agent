@@ -30,8 +30,16 @@ Installation des dépendances : voir `INSTALL.md` (plus `pywebview` pour la fen�
 
 ## Le dock
 
-Une icône = un panneau. Faits : **Cerveaux** (⌘1), **Conversations** (⌘2) et **Mémoire** (⌘3).
-À venir, un par un : Outils, Âme, Actions, Réglages, et Comparer.
+Une icône = un panneau. Faits : **Cerveaux** (⌘1), **Conversations** (⌘2), **Mémoire** (⌘3) et **Outils** (⌘4).
+À venir, un par un : Âme, Actions, Réglages, et Comparer.
+
+**Outils** (`outils_reglages.py`) montre les 36 outils par famille, avec leur
+risque. On coupe un outil (il n'est plus proposé au cerveau), on le rend plus
+strict (toujours demander), on choisit l'autonomie et des préréglages. Une option
+éteinte par défaut, « commandes sans confirmation », laisse Vincent lister les
+préfixes de commandes terminal qui tournent sans accord en autonomie large, pour
+ses labos et ses CTF. Les règles de sécurité du moteur ne sont jamais affaiblies :
+on ne fait qu'ajouter ou retirer des demandes, sur décision explicite.
 
 **Conversations** rassemble celles de Root, Claude Code, Codex et Hermes
 (`conversations.py`), rangées par projet, cherchables dans tout leur texte. Les
@@ -44,7 +52,7 @@ par-dessus les règles de `memoire.py`) : ajouter, modifier, oublier, avec la ja
 du plafond et celle de la conversation en cours. Quand Root retient un fait seul,
 une notification propose d'annuler. `memoire.md` reste hors de GitHub.
 
-Raccourcis : ⌘1 cerveaux, ⌘2 conversations, ⌘3 mémoire, ⌘K palette, ⌘N nouvelle conversation, ⌘⏎ / esc pour
+Raccourcis : ⌘1 cerveaux, ⌘2 conversations, ⌘3 mémoire, ⌘4 outils, ⌘K palette, ⌘N nouvelle conversation, ⌘⏎ / esc pour
 autoriser ou refuser une action de Root.
 
 ## Tests
@@ -53,4 +61,4 @@ autoriser ou refuser une action de Root.
 ~/.local/root-venv/bin/python -m unittest discover -p "test_*.py"
 ```
 
-457 tests au 22/10/2026, hors réseau.
+467 tests au 22/10/2026, hors réseau.

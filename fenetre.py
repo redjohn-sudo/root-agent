@@ -30,6 +30,7 @@ import webview
 import cerveaux        # les LLM interchangeables (cerveaux.json)
 import conversations   # toutes les conversations, de tous les LLM
 import memoire_edition # voir et retoucher la mémoire durable
+import outils_reglages # le panneau Outils (couper, restreindre, autonomie)
 import root            # le moteur : boucle, outils, mémoire, sécurité
 
 ICI = Path(__file__).parent
@@ -122,6 +123,7 @@ class Pont:
         self.window = None
         self.cerveau = cerveaux.par_id(lire_reglages().get("cerveau", "")) or cerveaux.defaut()
         root.CERVEAU_COURANT = self.cerveau
+        outils_reglages.appliquer_au_moteur()   # choix de Vincent → variables du moteur
         self.cle = root.charger_cle()            # clé DeepSeek, gardée pour resumer_blocs
         self.jour = root.tokens_charger()
         self.occupe = threading.Lock()
@@ -230,6 +232,28 @@ class Pont:
         souvenirs = root.memoire.memoire_pour_prompt()
         if souvenirs.strip():
             self.messages.insert(1, {"role": "system", "content": ENTETE_MEMOIRE + "\n" + souvenirs})
+
+    # ── outils ──────────────────────────────────────────────────────────────
+    def outils(self):
+        return outils_reglages.etat()
+
+    def outil_basculer(self, nom, coupe):
+        return outils_reglages.basculer(nom, coupe)
+
+    def outil_strict(self, nom, strict):
+        return outils_reglages.rendre_strict(nom, strict)
+
+    def outils_prereglage(self, ident):
+        return outils_reglages.appliquer_prereglage(ident)
+
+    def outils_autonomie(self, mode):
+        return outils_reglages.choisir_autonomie(mode)
+
+    def terminal_auto_activer(self, actif):
+        return outils_reglages.terminal_auto_activer(actif)
+
+    def terminal_auto_prefixes(self, prefixes):
+        return outils_reglages.terminal_auto_prefixes(prefixes)
 
     # ── mémoire ─────────────────────────────────────────────────────────────
     def memoire(self):
