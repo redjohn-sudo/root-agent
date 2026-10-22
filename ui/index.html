@@ -135,6 +135,28 @@
     </div>
   </aside>
 
+  <!-- Panneau « Proxy » : apprendre le test web avec Root -->
+  <aside id="panneau-proxy" class="panneau verre" aria-label="Proxy" aria-hidden="true">
+    <div class="pan-tete">
+      <div>
+        <div class="pan-titre">Proxy</div>
+        <div class="pan-sous">Apprendre le test web, avec Root.</div>
+      </div>
+      <button class="pan-fermer" data-fermer aria-label="Fermer">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="px-corps">
+      <p class="px-intro">Un proxy web intercepte le trafic entre ton navigateur et le serveur : tu vois chaque requête, tu peux l'inspecter, la <b>rejouer</b>, la <b>modifier</b>. C'est le cœur du test web (IDOR, contrôle d'accès, injection). <b>Burp Suite</b> est l'outil de référence, en manuel. <b>mitmproxy</b> fait la même chose en scriptable : Root peut le piloter et te montrer en direct.</p>
+      <div class="px-statut" id="px-statut"></div>
+      <div class="px-actions">
+        <button id="px-burp" class="px-btn">Ouvrir Burp Suite</button>
+        <button id="px-apprendre" class="px-btn px-primaire">Apprends-moi avec mitmproxy</button>
+      </div>
+      <p class="px-note">« Apprends-moi » lance une session où Root explique pas à pas, démarre une capture mitmproxy et te commente le trafic réel. Les concepts se transposent direct dans Burp. C'est en regardant faire qu'on retient.</p>
+    </div>
+  </aside>
+
   <!-- Panneau « Réglages » : léger, pour désencombrer -->
   <aside id="panneau-reglages" class="panneau verre" aria-label="Réglages" aria-hidden="true">
     <div class="pan-tete">

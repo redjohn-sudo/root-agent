@@ -192,7 +192,7 @@ OUTILS = [
      "source": "https://portswigger.net/burp/communitydownload",
      "note": "Le proxy de référence pour tester une instance vivante. GUI : c'est TON outil manuel, Root ne le pilote pas.",
      "install": ["brew", "install", "--cask", "burp-suite"],
-     "detect": ("path", "/Applications/Burp Suite Community Edition.app")},
+     "detect": ("path", "/Applications/Burp Suite.app")},
     {"id": "sagemath", "nom": "SageMath", "role": "ctf",
      "source": "https://github.com/sagemath/sage",
      "note": "Le gros calcul mathématique (attaques RSA, réseaux/LLL, courbes). Lourd, à installer à part.",

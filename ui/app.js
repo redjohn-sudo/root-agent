@@ -22,6 +22,7 @@ const ICONES = {
   ame: '<path d="M12 20.5s-6.5-4-8.3-8.2C2.3 9 3.8 6 6.8 6c1.8 0 3.2 1.1 3.9 2.3h2.6C14 7.1 15.4 6 17.2 6c3 0 4.5 3 3.1 6.3C18.5 16.5 12 20.5 12 20.5z"/>',
   cadenas: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
   reglages: '<path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2l-.4-2.6H8.9l-.4 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 4 12a7 7 0 0 0 .1 1.2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2l.4 2.6h4.2l.4-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6A7 7 0 0 0 19 12z"/>',
+  proxy: '<path d="M4 7h11l-2.5-2.5M20 17H9l2.5 2.5"/><circle cx="18" cy="7" r="2"/><circle cx="6" cy="17" r="2"/>',
 };
 const svg = (nom, classe = "") => `<svg${classe ? ` class="${classe}"` : ""} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONES[nom]}</svg>`;
 const echap = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -215,6 +216,7 @@ const ICONES_DOCK = [
   { id: "terminal", label: "Terminal", icone: "terminal", kbd: "⌘5", ouvrir: ouvrirTerminal },
   { id: "pentest", label: "Pentest", icone: "cible", kbd: "⌘6", ouvrir: () => basculer("pentest") },
   { id: "ame", label: "Âme", icone: "ame", kbd: "⌘7", ouvrir: () => basculer("ame") },
+  { id: "proxy", label: "Proxy", icone: "proxy", kbd: "⌘9", ouvrir: () => basculer("proxy") },
   { id: "reglages", label: "Réglages", icone: "reglages", kbd: "⌘8", ouvrir: () => basculer("reglages") },
 ];
 function survol(btn, label, kbd) {
@@ -261,6 +263,7 @@ const PANNEAUX = {
   pentest: { el: $("#panneau-pentest"), ouvrir: chargerPentest },
   ame: { el: $("#panneau-ame"), ouvrir: chargerAme },
   reglages: { el: $("#panneau-reglages"), ouvrir: chargerReglages },
+  proxy: { el: $("#panneau-proxy"), ouvrir: chargerProxy },
 };
 let PANNEAU = null;
 function ouvrirPanneau(nom) {
@@ -1012,6 +1015,7 @@ function entreesPalette(q) {
     { label: "Pentest", aide: "Attaquer tes cerveaux, voir les failles", icone: "cible", kbd: "⌘6", faire: () => ouvrirPanneau("pentest") },
     { label: "Âme", aide: "Qui est Root, et ses règles", icone: "ame", kbd: "⌘7", faire: () => ouvrirPanneau("ame") },
     { label: "Réglages", aide: "Le dock, l'apparence, à propos", icone: "reglages", kbd: "⌘8", faire: () => ouvrirPanneau("reglages") },
+    { label: "Proxy", aide: "Apprendre le test web avec Root", icone: "proxy", kbd: "⌘9", faire: () => ouvrirPanneau("proxy") },
     ...convs,
   ];
 }
@@ -1059,6 +1063,7 @@ addEventListener("keydown", e => {
   if (cmd && e.key === "6") { e.preventDefault(); frapper($("#ic-pentest")); basculer("pentest"); return; }
   if (cmd && e.key === "7") { e.preventDefault(); frapper($("#ic-ame")); basculer("ame"); return; }
   if (cmd && e.key === "8") { e.preventDefault(); frapper($("#ic-reglages")); basculer("reglages"); return; }
+  if (cmd && e.key === "9") { e.preventDefault(); frapper($("#ic-proxy")); basculer("proxy"); return; }
   if (cmd && e.key.toLowerCase() === "n") { e.preventDefault(); nouvelleConversation(); }
 });
 
@@ -1148,7 +1153,7 @@ async function chargerReglages() {
 }
 function rendreReglages() {
   if (!RG) return;
-  const icones = { cerveaux: "cerveau", conversations: "bulle", memoire: "carnet", outils: "outils", terminal: "terminal", pentest: "cible", ame: "ame" };
+  const icones = { cerveaux: "cerveau", conversations: "bulle", memoire: "carnet", outils: "outils", terminal: "terminal", pentest: "cible", ame: "ame", proxy: "proxy" };
   $("#rg-dock").innerHTML = RG.panneaux.map(p =>
     `<label class="rg-dock-item${p.visible ? "" : " off"}" data-id="${p.id}">${svg(icones[p.id] || "outils", "rg-ic")}<span class="rg-nom">${echap(p.label)}</span><input type="checkbox" ${p.visible ? "checked" : ""}><span class="interr"></span></label>`).join("");
   $("#rg-dock").querySelectorAll(".rg-dock-item").forEach(el => {
@@ -1173,7 +1178,22 @@ $("#rg-fond-defaut").onclick = async () => {
   await api().reglage_fond_defaut(); RG.fond = ""; appliquerReglages(RG); toast("Fond par défaut");
 };
 
-// ── Panneau « Âme » : qui est Root, et ses règles ───────────────────────────
+// ── Panneau « Proxy » : apprendre le test web avec Root ─────────────────────
+async function chargerProxy() {
+  if (!api()) return;
+  const e = await api().proxy_etat();
+  $("#px-statut").innerHTML =
+    `<div class="px-stat ${e.burp ? "ok" : "non"}"><span class="pt"></span>Burp Suite ${e.burp ? "installé" : "pas installé (bouton = page de téléchargement)"}</div>
+     <div class="px-stat ${e.mitmproxy ? "ok" : "non"}"><span class="pt"></span>mitmproxy ${e.mitmproxy ? "installé — Root peut le piloter" : "pas encore installé"}</div>`;
+}
+$("#px-burp").onclick = () => api() && api().ouvrir_burp();
+$("#px-apprendre").onclick = () => {
+  const demande = "Apprends-moi le test web avec un proxy, en pratique. 1) Explique-moi simplement ce qu'est un proxy d'interception (Burp/mitmproxy) et le cycle intercepter → inspecter → rejouer → modifier. 2) Vérifie que mitmproxy est installé ; sinon dis-le-moi. 3) Démarre une petite démonstration : lance mitmdump dans ton bac à sable sur un port local, montre-moi comment router un navigateur à travers, capture 2-3 requêtes vers un site de test, et commente-les (méthode, URL, en-têtes, paramètres). 4) Montre comment on modifierait une requête (ex. changer un id dans l'URL) et explique en quoi ça sert pour chercher une IDOR. 5) Fais le parallèle : où se trouvent ces mêmes actions dans Burp Suite. Va étape par étape, en m'expliquant comme à un débutant, et attends mes questions.";
+  fermerPanneau();
+  if (api()) { ajouterToi(demande); api().envoyer(demande); }
+};
+
+// ── Panneau « Âme » : qui est Root, et ses règles ───────────────────────────// ── Panneau « Âme » : qui est Root, et ses règles ───────────────────────────
 let AME = null;
 async function chargerAme() {
   if (!api()) return;

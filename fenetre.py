@@ -56,7 +56,7 @@ def ecrire_reglages(**valeurs) -> None:
     REGLAGES.write_text(json.dumps(r, ensure_ascii=False, indent=2), encoding="utf-8")
 ENTETE_MEMOIRE = "Mémoire durable de Root :"
 VERSION = "1.0"
-PANNEAUX_DOCK = [("cerveaux","Cerveaux"),("conversations","Conversations"),("memoire","Mémoire"),("outils","Outils"),("terminal","Terminal"),("pentest","Pentest"),("ame","Âme")]
+PANNEAUX_DOCK = [("cerveaux","Cerveaux"),("conversations","Conversations"),("memoire","Mémoire"),("outils","Outils"),("terminal","Terminal"),("pentest","Pentest"),("ame","Âme"),("proxy","Proxy")]
 ATTENTE_MAX = 600      # secondes pour répondre à une demande d'autorisation
 CHEMINS_CMD = [Path.home() / "bin", Path.home() / ".local" / "bin", Path("/opt/homebrew/bin")]
 
@@ -404,6 +404,25 @@ class Pont:
             subprocess.Popen(["open", "-a", "Brave Browser", url])
             return True
         return False
+
+    # ── proxy / apprendre le test web ───────────────────────────────────────
+    def proxy_etat(self):
+        burp = Path("/Applications/Burp Suite.app").exists()
+        import sys as _s
+        venvbin = Path(_s.executable).parent
+        mitm = bool(shutil.which("mitmdump") or (venvbin / "mitmdump").exists())
+        return {"burp": burp, "mitmproxy": mitm}
+
+    def ouvrir_burp(self):
+        app = Path("/Applications/Burp Suite.app")
+        if app.exists():
+            subprocess.Popen(["open", "-a", "Burp Suite"])
+            self.emettre({"type": "toast", "texte": "Burp Suite ouvert", "ok": True})
+        else:
+            subprocess.Popen(["open", "-a", "Brave Browser",
+                              "https://portswigger.net/burp/communitydownload"])
+            self.emettre({"type": "toast", "texte": "Burp non installé : page de téléchargement ouverte", "ok": False})
+        return True
 
     # ── réglages ────────────────────────────────────────────────────────────
     def reglages_etat(self):

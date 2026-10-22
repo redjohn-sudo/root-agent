@@ -26,7 +26,7 @@ Installation des dépendances : voir `INSTALL.md` (plus `pywebview` pour la fen�
   vérification de Codex, recherche de Claude cloud, action, sécurité, lecture,
   immunité, consentement, entendre de Claude Code).
 - `outils_externes.py` : le registre, dans le code, de tous les outils que Vincent
-  veut dans Root (39 : red team, défense, offensif, boîte à outils CTF, revue de code & proxy, briques, modèles locaux). Chacun
+  veut dans Root (39, dont la boîte à outils CTF et la revue de code & proxy). Panneau Proxy (⌘9) : apprendre le test web avec Root (Burp + mitmproxy). Chacun
   avec sa source, son rôle, sa détection et sa commande d'installation. Le panneau
   Outils les montre avec leur état et un bouton « Installer » (pip / npm / brew).
 - `sandbox.py` + outil `executer_script` : Root écrit et lance son propre code
@@ -64,7 +64,7 @@ Installation des dépendances : voir `INSTALL.md` (plus `pywebview` pour la fen�
 ## Le dock
 
 Une icône = un panneau. Faits : **Cerveaux** (⌘1), **Conversations** (⌘2), **Mémoire** (⌘3), **Outils**
-(⌘4), **Terminal** (⌘5) et **Pentest** (⌘6) et **Âme** (⌘7) et **Réglages** (⌘8). À venir : Actions, Comparer.
+(⌘4), **Terminal** (⌘5) et **Pentest** (⌘6) et **Âme** (⌘7), **Réglages** (⌘8) et **Proxy** (⌘9). À venir : Actions, Comparer.
 
 **Terminal** (`terminal_shell.py` + `ui/vendor/xterm.js`) : un vrai shell (PTY)
 dans la fenêtre, où Vincent tape ses commandes, comme dans Ghostty. Rien à voir
@@ -96,7 +96,7 @@ par-dessus les règles de `memoire.py`) : ajouter, modifier, oublier, avec la ja
 du plafond et celle de la conversation en cours. Quand Root retient un fait seul,
 une notification propose d'annuler. `memoire.md` reste hors de GitHub.
 
-Raccourcis : ⌘1 cerveaux, ⌘2 conversations, ⌘3 mémoire, ⌘4 outils, ⌘5 terminal, ⌘6 pentest, ⌘7 âme, ⌘8 réglages, ⌘K palette, ⌘N nouvelle conversation, ⌘⏎ / esc pour
+Raccourcis : ⌘1 cerveaux, ⌘2 conversations, ⌘3 mémoire, ⌘4 outils, ⌘5 terminal, ⌘6 pentest, ⌘7 âme, ⌘8 réglages, ⌘9 proxy, ⌘K palette, ⌘N nouvelle conversation, ⌘⏎ / esc pour
 autoriser ou refuser une action de Root.
 
 ## En faire une app (Root.app)
