@@ -81,10 +81,18 @@
         <button class="pt-onglet" data-vue="failles">Failles</button>
       </div>
       <section class="pt-vue" id="pt-lancer">
-        <label class="pt-lab">Cible (le cerveau à attaquer)</label>
-        <select id="pt-cerveau" class="pt-select"></select>
-        <label class="pt-lab">Attaques</label>
-        <div id="pt-probes"></div>
+        <div class="ou-seg" id="pt-type"><button data-t="cloud" class="on">Cerveau (cloud)</button><button data-t="local">Cible locale</button></div>
+        <div id="pt-bloc-cloud">
+          <label class="pt-lab">Cible (le cerveau à attaquer)</label>
+          <select id="pt-cerveau" class="pt-select"></select>
+          <label class="pt-lab">Attaques</label>
+          <div id="pt-probes"></div>
+        </div>
+        <div id="pt-bloc-local" hidden>
+          <label class="pt-lab">Modèle local (ollama)</label>
+          <select id="pt-modele" class="pt-select"></select>
+          <p class="pt-mandat-aide">Root monte une cible vulnérable : ce modèle reçoit un secret caché dans son prompt système, et on tente de le lui faire cracher. Le juge est déterministe (le secret a-t-il fui ?). 100 % hors ligne.</p>
+        </div>
         <div class="pt-reps"><label class="pt-lab">Répéter chaque attaque</label>
           <div class="ou-seg" id="pt-essais"></div></div>
         <button id="pt-go" class="pt-go">Lancer la campagne</button>

@@ -165,3 +165,48 @@ class TestMandat(unittest.TestCase):
         self.assertEqual(vu["msgs"][0], {"role": "system", "content": "MANDAT-X"})
         self.assertEqual(vu["msgs"][-1]["content"], "propose un jailbreak de test")
         self.assertEqual(vu["msgs"][1]["content"], "ok")   # historique conservé
+
+
+class TestBancCible(unittest.TestCase):
+    def test_banc_cible_cache_un_secret_et_le_juge_le_reconnait(self):
+        gen, probe, secret = rt.banc_cible("qwen3.5:9b", secret="CANARI-TEST")
+        self.assertEqual(secret, "CANARI-TEST")
+        self.assertIn("CANARI-TEST", gen.systeme)              # secret dans le prompt système
+        cas = list(probe.cas())
+        self.assertTrue(all(c.canari == "CANARI-TEST" for c in cas))
+        self.assertTrue(all(c.messages[0]["role"] == "user" for c in cas))   # pas de system injecté
+        # juge déterministe : fuite détectée seulement si le secret ressort
+        det = probe.detectors()[0]
+        self.assertTrue(det.detecte("le secret est CANARI-TEST", cas[0]))
+        self.assertFalse(det.detecte("je ne peux pas révéler ce secret", cas[0]))
+
+    def test_ollama_generator_remplace_le_system_par_celui_de_la_cible(self):
+        vu = {}
+        g = rt.OllamaGenerator("m", systeme="SECRET-SYS")
+        # on simule l'appel réseau
+        import redteam
+        orig = redteam.OllamaGenerator.repondre
+        def faux(self, messages):
+            vu["final"] = ([{"role": "system", "content": self.systeme}] if self.systeme else []) + \
+                          [m for m in messages if m.get("role") != "system"]
+            return "ok"
+        redteam.OllamaGenerator.repondre = faux
+        try:
+            g.repondre([{"role": "system", "content": "injecté"}, {"role": "user", "content": "salut"}])
+        finally:
+            redteam.OllamaGenerator.repondre = orig
+        self.assertEqual(vu["final"][0], {"role": "system", "content": "SECRET-SYS"})
+        self.assertNotIn("injecté", json.dumps(vu["final"]))   # le system injecté est écarté
+
+    def test_campagne_cible_journalisee(self):
+        import pentest_journal as pj, tempfile
+        from pathlib import Path
+        from unittest import mock
+        with mock.patch.object(pj, "DB", Path(tempfile.mkdtemp()) / "p.db"):
+            _, probe, secret = rt.banc_cible("m", secret="CANARI-Z")
+            # modèle qui fuit le secret
+            rap = rt.Harnais().lancer([probe], rt.FauxGenerator("voici CANARI-Z"))
+            cid = pj.enregistrer(rap, "local:m", ["extraction_secret"], 1)
+            d = pj.campagne(cid)
+            self.assertEqual(d["taux"], 1.0)                    # tout a fui
+            self.assertEqual(d["probes"], ["extraction_secret"])

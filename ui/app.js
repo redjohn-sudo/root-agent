@@ -1089,7 +1089,7 @@ $("#terminal-neuf").onclick = async () => {
 };
 
 // ── Panneau « Pentest » : attaquer les cerveaux, garder la trace ─────────────
-let PT = null, PT_PROBES = new Set(), PT_ESSAIS = 1, PT_EN_COURS = false;
+let PT = null, PT_PROBES = new Set(), PT_ESSAIS = 1, PT_EN_COURS = false, PT_TYPE = "cloud";
 const fmtPct = t => Math.round((t || 0) * 100) + "%";
 const dateCourteH = ts => { const d = new Date(ts * 1000); const j = joursDepuis(ts);
   return j <= 0 ? "aujourd'hui " + d.toLocaleTimeString("fr-FR", {hour:"2-digit",minute:"2-digit"})
@@ -1107,6 +1107,14 @@ function rendrePentest() {
   const sel = $("#pt-cerveau");
   sel.innerHTML = PT.cerveaux.map(c => `<option value="${c.id}">${echap(c.nom)} · ${echap(c.fournisseur)}</option>`).join("")
     || '<option disabled>Aucun cerveau avec clé</option>';
+  const loc = PT.cibles_locales || [];
+  $("#pt-modele").innerHTML = loc.map(m => `<option value="${echap(m)}">${echap(m)}</option>`).join("")
+    || '<option disabled>ollama ne tourne pas (ou aucun modèle)</option>';
+  document.querySelectorAll("#pt-type button").forEach(b => {
+    b.classList.toggle("on", b.dataset.t === PT_TYPE);
+    b.onclick = () => { PT_TYPE = b.dataset.t; $("#pt-bloc-cloud").hidden = PT_TYPE !== "cloud"; $("#pt-bloc-local").hidden = PT_TYPE !== "local"; rendrePentest(); };
+  });
+  $("#pt-bloc-cloud").hidden = PT_TYPE !== "cloud"; $("#pt-bloc-local").hidden = PT_TYPE !== "local";
   $("#pt-probes").innerHTML = PT.probes.map(p =>
     `<label class="pt-probe${PT_PROBES.has(p.id) ? " on" : ""}" data-id="${p.id}"><span class="pt-check"></span><span class="pt-nom">${echap(p.id)}</span><span class="pt-meta">${echap(p.categorie)} · ${p.cas} cas</span></label>`).join("");
   $("#pt-probes").querySelectorAll(".pt-probe").forEach(el => el.onclick = () => {
@@ -1134,10 +1142,15 @@ $("#pt-mandat").addEventListener("keydown", e => e.stopPropagation());
 
 $("#pt-go").onclick = async () => {
   if (PT_EN_COURS || !api()) return;
+  if (PT_TYPE === "local") {
+    const m = $("#pt-modele").value;
+    if (!m) return toast("Aucun modèle local disponible", false);
+    await api().pentest_lancer_cible(m, PT_ESSAIS);
+    return;
+  }
   const cid = $("#pt-cerveau").value;
   if (!cid || !PT_PROBES.size) return toast("Choisis une cible et au moins une attaque", false);
-  const ok = await api().pentest_lancer(cid, [...PT_PROBES], PT_ESSAIS);
-  if (ok === false) return;
+  await api().pentest_lancer(cid, [...PT_PROBES], PT_ESSAIS);
 };
 function ptDebut(ev) {
   PT_EN_COURS = true;

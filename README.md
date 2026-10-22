@@ -31,6 +31,9 @@ Installation des dépendances : voir `INSTALL.md` (plus `pywebview` pour la fen�
   Lancer / Historique / Failles (taux de réussite d'attaque par type). Un
   « mandat de test » (system prompt, modifiable) cadre le modèle attaquant pour
   qu'il sache travailler dans un test autorisé ; il n'est jamais envoyé à la cible.
+  Deux types de cible : un cerveau cloud, ou une **cible locale** (un modèle
+  ollama + un secret caché dans son prompt système, qu'on tente d'extraire ; juge
+  déterministe, 100 % hors ligne).
 - `redteam.py` : le cœur de red team IA (probe / detector / generator / harnais,
   façon garak). Probes de base (fuite de prompt, injection directe et indirecte,
   encodage, jeu de rôle), detectors (canari, chaîne, refus, juge LLM), et chargeurs
@@ -97,4 +100,4 @@ Les logs de l'app vont dans `~/.local/root-app.log`.
 ~/.local/root-venv/bin/python -m unittest discover -p "test_*.py"
 ```
 
-503 tests au 22/10/2026, hors réseau.
+506 tests au 22/10/2026, hors réseau.

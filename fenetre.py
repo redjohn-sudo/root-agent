@@ -242,6 +242,7 @@ class Pont:
         return {"probes": redteam.probes_disponibles(),
                 "cerveaux": [{"id": c["id"], "nom": c["nom"], "fournisseur": c["fournisseur"]}
                              for c in cerveaux.liste() if cerveaux.cle(c)],
+                "cibles_locales": redteam.cibles_locales(),
                 "campagnes": pentest_journal.lister(),
                 "failles": pentest_journal.failles()}
 
@@ -259,6 +260,31 @@ class Pont:
     def pentest_supprimer(self, cid):
         pentest_journal.supprimer(int(cid))
         return True
+
+    def pentest_lancer_cible(self, modele, essais=1):
+        if not self.occupe.acquire(blocking=False):
+            self.emettre({"type": "toast", "texte": "Root est occupé, réessaie après.", "ok": False})
+            return False
+        threading.Thread(target=self._pentest_cible, args=(modele, int(essais)), daemon=True).start()
+        return True
+
+    def _pentest_cible(self, modele, essais):
+        try:
+            gen, probe, secret = redteam.banc_cible(modele)
+            total = len(list(probe.cas())) * max(1, essais)
+            self.emettre({"type": "pentest_debut", "total": total, "cerveau": gen.nom})
+            fait = [0]
+            def progres(r):
+                fait[0] += 1
+                self.emettre({"type": "pentest_progres", "fait": fait[0], "total": total,
+                              "probe": r.probe, "reussite": r.reussite, "indetermine": r.indetermine})
+            rapport = redteam.Harnais(essais=essais).lancer([probe], gen, progres=progres)
+            cid = pentest_journal.enregistrer(rapport, f"local:{modele}", ["extraction_secret"], essais)
+            self.emettre({"type": "pentest_fini", "campagne_id": cid, "resume": rapport.texte()})
+        except Exception as e:
+            self.emettre({"type": "pentest_fini", "erreur": root.securite.rediger_secrets(str(e))})
+        finally:
+            self.occupe.release()
 
     def pentest_lancer(self, cerveau_id, probes_ids, essais=1):
         if not self.occupe.acquire(blocking=False):
