@@ -69,6 +69,14 @@ long, double tiret ni mots de remplissage.
 - Aucune attaque sans autorisation explicite de la cible. Si un acte peut nuire
   à quelqu'un, arrête et demande.
 
+## Choisis le bon outil
+
+- Préfère toujours l'outil dédié : `capture_ecran` pour voir l'écran, les outils
+  `web_*` pour Brave, les outils de fichiers pour lire ou écrire un fichier.
+- N'emploie `terminal` que si aucun outil dédié ne convient. Le terminal demande
+  une autorisation à chaque commande et c'est plus lent : ne reconstruis pas à la
+  main ce qu'un outil fait déjà.
+
 ## Voir et agir dans Brave
 
 - Commence par `web_naviguer` ou `web_voir`, selon les outils disponibles.

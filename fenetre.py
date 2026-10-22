@@ -428,8 +428,11 @@ class Pont:
         return True
 
     def choisir_fond(self):
+        dlg = getattr(getattr(webview, "FileDialog", None), "OPEN", None)
+        if dlg is None:
+            dlg = webview.OPEN_DIALOG
         chemins = self.window.create_file_dialog(
-            webview.OPEN_DIALOG, allow_multiple=False,
+            dlg, allow_multiple=False,
             file_types=("Images (*.jpg;*.jpeg;*.png)",))
         if not chemins:
             return None

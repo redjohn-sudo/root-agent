@@ -650,8 +650,9 @@ OUTILS = {
     "capture_ecran": {
         "fn": outil_capture_ecran, "risque": "sûr",
         "schema": {"description": "Prendre une capture de l'écran de l'utilisateur pour "
-                   "voir ce qui est affiché (fenêtres, boutons, texte). À utiliser "
-                   "quand il faut regarder l'écran pour comprendre ou agir.",
+                   "voir ce qui est affiché (fenêtres, boutons, texte). C'est le SEUL "
+                   "moyen de voir l'écran : n'emploie jamais une commande terminal "
+                   "(screencapture, scrot, grim…) pour ça, utilise cet outil.",
                    "parameters": {"type": "object", "properties": {}, "required": []}},
     },
     "web_naviguer": {
