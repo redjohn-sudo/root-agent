@@ -25,6 +25,10 @@ Installation des dépendances : voir `INSTALL.md` (plus `pywebview` pour la fen�
 - `root.py` et ses modules : le harness (mémoire de Kimi K3, autonomie et
   vérification de Codex, recherche de Claude cloud, action, sécurité, lecture,
   immunité, consentement, entendre de Claude Code).
+- `pentest_journal.py` + panneau Pentest (⌘6) : lancer une campagne d'attaques
+  contre un cerveau depuis la fenêtre, répéter N fois, et garder la trace durable
+  (cible, attaques, méthode, résultats) dans `~/.local/root-pentest.db`. Onglets
+  Lancer / Historique / Failles (taux de réussite d'attaque par type).
 - `redteam.py` : le cœur de red team IA (probe / detector / generator / harnais,
   façon garak). Probes de base (fuite de prompt, injection directe et indirecte,
   encodage, jeu de rôle), detectors (canari, chaîne, refus, juge LLM), et chargeurs
@@ -37,7 +41,7 @@ Installation des dépendances : voir `INSTALL.md` (plus `pywebview` pour la fen�
 ## Le dock
 
 Une icône = un panneau. Faits : **Cerveaux** (⌘1), **Conversations** (⌘2), **Mémoire** (⌘3), **Outils**
-(⌘4) et **Terminal** (⌘5). À venir, un par un : Âme, Actions, Réglages, Comparer.
+(⌘4), **Terminal** (⌘5) et **Pentest** (⌘6). À venir : Âme, Actions, Réglages, Comparer.
 
 **Terminal** (`terminal_shell.py` + `ui/vendor/xterm.js`) : un vrai shell (PTY)
 dans la fenêtre, où Vincent tape ses commandes, comme dans Ghostty. Rien à voir
@@ -69,7 +73,7 @@ par-dessus les règles de `memoire.py`) : ajouter, modifier, oublier, avec la ja
 du plafond et celle de la conversation en cours. Quand Root retient un fait seul,
 une notification propose d'annuler. `memoire.md` reste hors de GitHub.
 
-Raccourcis : ⌘1 cerveaux, ⌘2 conversations, ⌘3 mémoire, ⌘4 outils, ⌘5 terminal, ⌘K palette, ⌘N nouvelle conversation, ⌘⏎ / esc pour
+Raccourcis : ⌘1 cerveaux, ⌘2 conversations, ⌘3 mémoire, ⌘4 outils, ⌘5 terminal, ⌘6 pentest, ⌘K palette, ⌘N nouvelle conversation, ⌘⏎ / esc pour
 autoriser ou refuser une action de Root.
 
 ## En faire une app (Root.app)
@@ -91,4 +95,4 @@ Les logs de l'app vont dans `~/.local/root-app.log`.
 ~/.local/root-venv/bin/python -m unittest discover -p "test_*.py"
 ```
 
-494 tests au 22/10/2026, hors réseau.
+501 tests au 22/10/2026, hors réseau.

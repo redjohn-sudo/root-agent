@@ -18,6 +18,7 @@ const ICONES = {
   carnet: '<path d="M6.5 4.5h10A1.5 1.5 0 0 1 18 6v13.5H8a1.5 1.5 0 0 1-1.5-1.5zM6.5 18A1.5 1.5 0 0 1 8 16.5h10M10 8.5h4.5"/>',
   outils: '<path d="M10 6.5a3.5 3.5 0 0 0-4.8 4.3l-1.7 1.7 2 2 1.7-1.7A3.5 3.5 0 0 0 11.5 8M13.5 13l4.5 4.5a1.4 1.4 0 0 0 2-2L15.5 11"/>',
   terminal: '<path d="M4.5 5.5h15a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1zM7 10l2.5 2L7 14M12.5 14.5h4"/>',
+  cible: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
 };
 const svg = (nom, classe = "") => `<svg${classe ? ` class="${classe}"` : ""} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONES[nom]}</svg>`;
 const echap = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -185,6 +186,9 @@ window.rootEvent = function (ev) {
     case "memoire": if (PANNEAU === "memoire") chargerMemoire(); break;
     case "term": termEcrire(ev.data); break;
     case "term_fin": termFin(); break;
+    case "pentest_debut": ptDebut(ev); break;
+    case "pentest_progres": ptProgres(ev); break;
+    case "pentest_fini": ptFini(ev); break;
     case "retenu":
       toast(`Root a retenu : ${ev.fait}`, true, { label: "Annuler", faire: async () => {
         await api().memoire_retirer(ev.fait); toast("Retiré de sa mémoire"); } });
@@ -201,6 +205,7 @@ const ICONES_DOCK = [
   { id: "memoire", label: "Mémoire", icone: "carnet", kbd: "⌘3", ouvrir: () => basculer("memoire") },
   { id: "outils", label: "Outils", icone: "outils", kbd: "⌘4", ouvrir: () => basculer("outils") },
   { id: "terminal", label: "Terminal", icone: "terminal", kbd: "⌘5", ouvrir: ouvrirTerminal },
+  { id: "pentest", label: "Pentest", icone: "cible", kbd: "⌘6", ouvrir: () => basculer("pentest") },
 ];
 function survol(btn, label, kbd) {
   const r = btn.getBoundingClientRect(), d = $("#dock").getBoundingClientRect();
@@ -241,6 +246,7 @@ const PANNEAUX = {
   conversations: { el: $("#panneau-conv"), ouvrir: () => { rendreConversations(); chargerConversations(); setTimeout(() => cherche.focus(), 80); } },
   memoire: { el: $("#panneau-memoire"), ouvrir: () => { rendreMemoire(); chargerMemoire(); setTimeout(() => champFait.focus(), 80); } },
   outils: { el: $("#panneau-outils"), ouvrir: chargerOutils },
+  pentest: { el: $("#panneau-pentest"), ouvrir: chargerPentest },
 };
 let PANNEAU = null;
 function ouvrirPanneau(nom) {
@@ -965,6 +971,7 @@ function entreesPalette(q) {
     { label: "Mémoire", aide: "Ce que Root sait de toi", icone: "carnet", kbd: "⌘3", faire: () => ouvrirPanneau("memoire") },
     { label: "Outils", aide: "Ce que Root a le droit de faire", icone: "outils", kbd: "⌘4", faire: () => ouvrirPanneau("outils") },
     { label: "Terminal", aide: "Un vrai shell, tu tapes dedans", icone: "terminal", kbd: "⌘5", faire: ouvrirTerminal },
+    { label: "Pentest", aide: "Attaquer tes cerveaux, voir les failles", icone: "cible", kbd: "⌘6", faire: () => ouvrirPanneau("pentest") },
     ...convs,
   ];
 }
@@ -1009,6 +1016,7 @@ addEventListener("keydown", e => {
   if (cmd && e.key === "3") { e.preventDefault(); frapper($("#ic-memoire")); basculer("memoire"); return; }
   if (cmd && e.key === "4") { e.preventDefault(); frapper($("#ic-outils")); basculer("outils"); return; }
   if (cmd && e.key === "5") { e.preventDefault(); frapper($("#ic-terminal")); basculerTerminal(); return; }
+  if (cmd && e.key === "6") { e.preventDefault(); frapper($("#ic-pentest")); basculer("pentest"); return; }
   if (cmd && e.key.toLowerCase() === "n") { e.preventDefault(); nouvelleConversation(); }
 });
 
@@ -1079,6 +1087,122 @@ $("#terminal-neuf").onclick = async () => {
   await api().terminal_demarrer(TERM.cols, TERM.rows);
   TERM.focus();
 };
+
+// ── Panneau « Pentest » : attaquer les cerveaux, garder la trace ─────────────
+let PT = null, PT_PROBES = new Set(), PT_ESSAIS = 1, PT_EN_COURS = false;
+const fmtPct = t => Math.round((t || 0) * 100) + "%";
+const dateCourteH = ts => { const d = new Date(ts * 1000); const j = joursDepuis(ts);
+  return j <= 0 ? "aujourd'hui " + d.toLocaleTimeString("fr-FR", {hour:"2-digit",minute:"2-digit"})
+    : j === 1 ? "hier" : d.toLocaleDateString("fr-FR", {day:"numeric",month:"short"}); };
+
+async function chargerPentest() {
+  if (!api()) return;
+  PT = await api().pentest_etat();
+  if (!PT_PROBES.size) PT.probes.forEach(p => PT_PROBES.add(p.id));   // tout coché au départ
+  rendrePentest();
+}
+function rendrePentest() {
+  if (!PT) return;
+  const sel = $("#pt-cerveau");
+  sel.innerHTML = PT.cerveaux.map(c => `<option value="${c.id}">${echap(c.nom)} · ${echap(c.fournisseur)}</option>`).join("")
+    || '<option disabled>Aucun cerveau avec clé</option>';
+  $("#pt-probes").innerHTML = PT.probes.map(p =>
+    `<label class="pt-probe${PT_PROBES.has(p.id) ? " on" : ""}" data-id="${p.id}"><span class="pt-check"></span><span class="pt-nom">${echap(p.id)}</span><span class="pt-meta">${echap(p.categorie)} · ${p.cas} cas</span></label>`).join("");
+  $("#pt-probes").querySelectorAll(".pt-probe").forEach(el => el.onclick = () => {
+    const id = el.dataset.id;
+    PT_PROBES.has(id) ? PT_PROBES.delete(id) : PT_PROBES.add(id);
+    el.classList.toggle("on", PT_PROBES.has(id));
+  });
+  $("#pt-essais").innerHTML = [1, 3, 5].map(n => `<button data-n="${n}"${n === PT_ESSAIS ? ' class="on"' : ""}>${n}×</button>`).join("");
+  $("#pt-essais").querySelectorAll("button").forEach(b => b.onclick = () => { PT_ESSAIS = +b.dataset.n; rendrePentest(); });
+}
+$("#pt-go").onclick = async () => {
+  if (PT_EN_COURS || !api()) return;
+  const cid = $("#pt-cerveau").value;
+  if (!cid || !PT_PROBES.size) return toast("Choisis une cible et au moins une attaque", false);
+  const ok = await api().pentest_lancer(cid, [...PT_PROBES], PT_ESSAIS);
+  if (ok === false) return;
+};
+function ptDebut(ev) {
+  PT_EN_COURS = true;
+  const b = $("#pt-go"); b.disabled = true; b.textContent = `Attaque de ${ev.cerveau}…`;
+  const p = $("#pt-progres"); p.hidden = false;
+  p.querySelector("i").style.width = "0%";
+  p.querySelector("span").textContent = `0 / ${ev.total}`;
+}
+function ptProgres(ev) {
+  const p = $("#pt-progres");
+  p.querySelector("i").style.width = (ev.fait / ev.total * 100) + "%";
+  const m = ev.reussite ? " ⚠" : "";
+  p.querySelector("span").textContent = `${ev.fait} / ${ev.total}${m}`;
+}
+async function ptFini(ev) {
+  PT_EN_COURS = false;
+  const b = $("#pt-go"); b.disabled = false; b.textContent = "Lancer la campagne";
+  $("#pt-progres").hidden = true;
+  if (ev.erreur) return toast("Campagne : " + ev.erreur, false);
+  toast("Campagne terminée");
+  await chargerPentest();
+  ptOnglet("historique");
+  if (ev.campagne_id) ptVoirCampagne(ev.campagne_id);
+}
+
+// onglets
+function ptOnglet(vue) {
+  document.querySelectorAll(".pt-onglet").forEach(o => o.classList.toggle("on", o.dataset.vue === vue));
+  ["lancer", "historique", "failles"].forEach(v => $("#pt-" + v).hidden = v !== vue);
+  if (vue === "historique") rendreHistorique();
+  if (vue === "failles") rendreFailles();
+}
+document.querySelectorAll(".pt-onglet").forEach(o => o.onclick = () => ptOnglet(o.dataset.vue));
+
+function rendreHistorique() {
+  const z = $("#pt-historique");
+  if (!PT || !PT.campagnes.length) { z.innerHTML = '<div class="pt-vide">Aucune campagne encore.<br>Lance ta première attaque dans « Lancer ».</div>'; return; }
+  z.innerHTML = PT.campagnes.map(c => {
+    const cls = c.taux >= 0.34 ? "taux-haut" : "taux-bas";
+    const ind = c.indetermines ? ` · ${c.indetermines} ind.` : "";
+    return `<button class="camp" data-id="${c.id}">
+      <div class="camp-tete"><span class="camp-nom">${echap(c.cerveau_nom)}</span>
+        <span class="camp-taux ${cls}">${fmtPct(c.taux)}</span>
+        <span class="camp-suppr" title="Supprimer">${svg("croix")}</span></div>
+      <div class="camp-sous">${dateCourteH(c.date)} · ${c.reussites}/${c.total} réussies${ind} · ${echap(c.probes.join(", "))}${c.essais > 1 ? ` · ${c.essais}×` : ""}</div>
+    </button>`;
+  }).join("");
+  z.querySelectorAll(".camp").forEach(el => {
+    el.onclick = e => {
+      const s = e.target.closest(".camp-suppr");
+      if (s) { e.stopPropagation(); return armer(s, "Supprimer ?", async () => { await api().pentest_supprimer(el.dataset.id); await chargerPentest(); rendreHistorique(); }); }
+      ptVoirCampagne(el.dataset.id);
+    };
+  });
+}
+
+async function ptVoirCampagne(cid) {
+  const d = await api().pentest_campagne(cid);
+  if (!d) return;
+  const z = $("#pt-historique");
+  const cls = d.taux >= 0.34 ? "taux-haut" : "taux-bas";
+  z.innerHTML = `<div class="pt-detail-tete"><button class="pt-retour">${svg("chevron")} retour</button>
+    <span class="camp-taux ${cls}">${fmtPct(d.taux)} de réussite</span></div>
+    <div class="camp-sous" style="margin-bottom:12px">${echap(d.cerveau_nom)} · ${dateCourteH(d.date)} · ${d.reussites}/${d.total} réussies${d.indetermines ? ` · ${d.indetermines} indéterminés` : ""}${d.essais > 1 ? ` · chaque attaque ${d.essais}×` : ""}</div>` +
+    d.cas.map((c, i) => {
+      const etat = c.indetermine ? "ind" : c.reussite ? "ok" : "";
+      const v = c.indetermine ? "indéterminé" : c.reussite ? "attaque réussie" : "résisté";
+      return `<div class="pt-cas ${etat}" data-i="${i}"><div class="pt-cas-tete"><span class="pastille-r"></span><span>${echap(c.probe)}</span><span style="color:var(--encre-3)"> · ${echap(c.cas)}</span><span class="pt-cas-verdict">${v}</span></div><div class="pt-cas-rep">${echap(c.reponse) || "<em>réponse vide</em>"}</div></div>`;
+    }).join("");
+  z.querySelector(".pt-retour").onclick = () => rendreHistorique();
+  z.querySelectorAll(".pt-cas").forEach(el => el.querySelector(".pt-cas-tete").onclick = () => el.classList.toggle("ouvert"));
+}
+
+function rendreFailles() {
+  const z = $("#pt-failles");
+  if (!PT || !PT.failles.length) { z.innerHTML = '<div class="pt-vide">Rien à montrer.<br>Les failles apparaissent après tes premières campagnes.</div>'; return; }
+  z.innerHTML = '<div class="camp-sous" style="margin:2px 2px 14px">Taux de réussite d\'attaque par type, toutes campagnes confondues. Plus c\'est haut, plus c\'est une faille à travailler.</div>' +
+    PT.failles.map(f => `<div class="faille"><div class="faille-tete"><span class="faille-nom">${echap(f.probe)}</span><span class="faille-taux" style="color:${f.taux >= 0.34 ? "#f0866a" : "var(--vert-clair)"}">${fmtPct(f.taux)}</span></div>
+      <div class="faille-barre"><i style="width:${fmtPct(f.taux)}"></i></div>
+      <div class="faille-sous">${f.reussites}/${f.total - f.indetermines} réussies${f.indetermines ? ` · ${f.indetermines} indéterminés` : ""}</div></div>`).join("");
+}
 
 // ── Saisie ───────────────────────────────────────────────────────────────────
 const saisie = $("#saisie");

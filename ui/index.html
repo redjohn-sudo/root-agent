@@ -63,6 +63,38 @@
   </aside>
   <div id="menu-ranger" class="verre" hidden></div>
 
+  <!-- Panneau « Pentest » : attaquer les cerveaux, garder la trace -->
+  <aside id="panneau-pentest" class="panneau verre" aria-label="Pentest" aria-hidden="true">
+    <div class="pan-tete">
+      <div>
+        <div class="pan-titre">Pentest</div>
+        <div class="pan-sous">Attaquer tes cerveaux, garder la trace, voir les failles.</div>
+      </div>
+      <button class="pan-fermer" data-fermer aria-label="Fermer">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="pt-corps">
+      <div class="pt-onglets" role="tablist">
+        <button class="pt-onglet on" data-vue="lancer">Lancer</button>
+        <button class="pt-onglet" data-vue="historique">Historique</button>
+        <button class="pt-onglet" data-vue="failles">Failles</button>
+      </div>
+      <section class="pt-vue" id="pt-lancer">
+        <label class="pt-lab">Cible (le cerveau à attaquer)</label>
+        <select id="pt-cerveau" class="pt-select"></select>
+        <label class="pt-lab">Attaques</label>
+        <div id="pt-probes"></div>
+        <div class="pt-reps"><label class="pt-lab">Répéter chaque attaque</label>
+          <div class="ou-seg" id="pt-essais"></div></div>
+        <button id="pt-go" class="pt-go">Lancer la campagne</button>
+        <div id="pt-progres" class="pt-progres" hidden><div class="pt-barre"><i></i></div><span></span></div>
+      </section>
+      <section class="pt-vue" id="pt-historique" hidden></section>
+      <section class="pt-vue" id="pt-failles" hidden></section>
+    </div>
+  </aside>
+
   <!-- Panneau « Mémoire » : ce que Root sait de Vincent, d'une conversation à l'autre -->
   <aside id="panneau-memoire" class="panneau verre" aria-label="Mémoire" aria-hidden="true">
     <div class="pan-tete">

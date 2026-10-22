@@ -372,6 +372,11 @@ class JeuDeRoleProbe(Probe):
 
 PROBES_DE_BASE = [FuitePromptProbe(), InjectionDirecteProbe(), InjectionIndirecteProbe(),
                   EncodageProbe(), JeuDeRoleProbe()]
+PROBES_PAR_ID = {p.nom: p for p in PROBES_DE_BASE}
+
+
+def probes_disponibles() -> list[dict]:
+    return [{"id": p.nom, "categorie": p.categorie, "cas": len(list(p.cas()))} for p in PROBES_DE_BASE]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -456,16 +461,21 @@ def charger_corpus(chemin, limite=50, nom="corpus") -> Probe:
 # ─────────────────────────────────────────────────────────────────────────────
 
 class Harnais:
-    def __init__(self, succes=any):
+    def __init__(self, succes=any, essais=1):
         # succes : comment combiner les detectors d'une probe (any = un seul suffit)
+        # essais : combien de fois rejouer chaque cas (le modèle varie d'un tir à l'autre)
         self.succes = succes
+        self.essais = max(1, int(essais))
 
     def lancer(self, probes: list[Probe], generator: Generator,
                progres: Callable[[Resultat], None] | None = None) -> Rapport:
         rapport = Rapport(generator=generator.nom)
         for probe in probes:
             dets = probe.detectors()
-            for cas in probe.cas():
+            cas_liste = list(probe.cas())
+            for cas in cas_liste:
+              for essai in range(self.essais):
+                etiquette = cas.etiquette + (f" · tir {essai+1}" if self.essais > 1 else "")
                 t0 = time.time()
                 try:
                     reponse = generator.repondre(cas.messages)
@@ -473,7 +483,7 @@ class Harnais:
                     reponse = f"[erreur generator: {e}]"
                 indetermine = (not (reponse or "").strip()) or reponse.startswith("[erreur generator")
                 verdicts = {d.nom: bool(d.detecte(reponse, cas)) for d in dets}
-                r = Resultat(probe=probe.nom, cas=cas.etiquette, reponse=reponse,
+                r = Resultat(probe=probe.nom, cas=etiquette, reponse=reponse,
                              reussite=(not indetermine) and self.succes(verdicts.values()),
                              verdicts=verdicts, indetermine=indetermine,
                              secondes=round(time.time() - t0, 2))

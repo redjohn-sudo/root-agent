@@ -32,6 +32,8 @@ import conversations   # toutes les conversations, de tous les LLM
 import memoire_edition # voir et retoucher la mémoire durable
 import outils_reglages # le panneau Outils (couper, restreindre, autonomie)
 import terminal_shell  # un vrai shell (PTY) dans la fenêtre, piloté par Vincent
+import redteam         # cœur de red team IA (probe/detector/generator/harnais)
+import pentest_journal  # trace durable des campagnes de pentest
 import root            # le moteur : boucle, outils, mémoire, sécurité
 
 ICI = Path(__file__).parent
@@ -234,6 +236,55 @@ class Pont:
         souvenirs = root.memoire.memoire_pour_prompt()
         if souvenirs.strip():
             self.messages.insert(1, {"role": "system", "content": ENTETE_MEMOIRE + "\n" + souvenirs})
+
+    # ── pentest (red team sur les cerveaux) ─────────────────────────────────
+    def pentest_etat(self):
+        return {"probes": redteam.probes_disponibles(),
+                "cerveaux": [{"id": c["id"], "nom": c["nom"], "fournisseur": c["fournisseur"]}
+                             for c in cerveaux.liste() if cerveaux.cle(c)],
+                "campagnes": pentest_journal.lister(),
+                "failles": pentest_journal.failles()}
+
+    def pentest_campagne(self, cid):
+        return pentest_journal.campagne(int(cid))
+
+    def pentest_supprimer(self, cid):
+        pentest_journal.supprimer(int(cid))
+        return True
+
+    def pentest_lancer(self, cerveau_id, probes_ids, essais=1):
+        if not self.occupe.acquire(blocking=False):
+            self.emettre({"type": "toast", "texte": "Root est occupé, réessaie après.", "ok": False})
+            return False
+        threading.Thread(target=self._pentest, args=(cerveau_id, list(probes_ids), int(essais)),
+                         daemon=True).start()
+        return True
+
+    def _pentest(self, cerveau_id, probes_ids, essais):
+        try:
+            c = cerveaux.par_id(cerveau_id)
+            if c is None or not cerveaux.cle(c):
+                self.emettre({"type": "pentest_fini", "erreur": "Cerveau indisponible ou sans clé."})
+                return
+            probes = [redteam.PROBES_PAR_ID[i] for i in probes_ids if i in redteam.PROBES_PAR_ID]
+            if not probes:
+                self.emettre({"type": "pentest_fini", "erreur": "Aucune attaque choisie."})
+                return
+            total = sum(len(list(p.cas())) for p in probes) * max(1, essais)
+            self.emettre({"type": "pentest_debut", "total": total, "cerveau": c["nom"]})
+            fait = [0]
+            def progres(r):
+                fait[0] += 1
+                self.emettre({"type": "pentest_progres", "fait": fait[0], "total": total,
+                              "probe": r.probe, "reussite": r.reussite, "indetermine": r.indetermine})
+            gen = redteam.CerveauGenerator(cerveau_id)
+            rapport = redteam.Harnais(essais=essais).lancer(probes, gen, progres=progres)
+            cid = pentest_journal.enregistrer(rapport, cerveau_id, probes_ids, essais)
+            self.emettre({"type": "pentest_fini", "campagne_id": cid, "resume": rapport.texte()})
+        except Exception as e:
+            self.emettre({"type": "pentest_fini", "erreur": root.securite.rediger_secrets(str(e))})
+        finally:
+            self.occupe.release()
 
     # ── terminal (un vrai shell, c'est Vincent qui tape) ────────────────────
     def terminal_demarrer(self, colonnes=80, lignes=24):
