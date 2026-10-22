@@ -514,7 +514,8 @@ kbd { font: 500 10.5px var(--mono); color: var(--encre-2); padding: 2px 6px; bor
 .ou-corps { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; padding: 0 14px 18px; display: flex; flex-direction: column; gap: 12px; }
 .ou-corps::-webkit-scrollbar { display: none; }
 .ou-mode { padding: 11px 12px; border-radius: 14px; background: rgba(255,255,255,.035); border: 1px solid var(--trait); }
-.ou-mode-tete { display: flex; justify-content: space-between; align-items: baseline; font-size: 12.5px; color: var(--encre-2); margin-bottom: 9px; }
+.ou-mode-tete { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; font-size: 12.5px; color: var(--encre); margin-bottom: 9px; }
+.ou-mode-tete #ou-mode-aide { font: 11px var(--police); color: var(--encre-3); }
 .ou-seg { display: flex; gap: 4px; padding: 3px; border-radius: 11px; background: rgba(0,0,0,.25); }
 .ou-seg button { flex: 1; padding: 7px; border-radius: 8px; font-size: 12.5px; color: var(--encre-2); transition: background .25s var(--ease), color .25s; }
 .ou-seg button.on { background: rgba(111,212,182,.16); color: var(--encre); box-shadow: inset 0 0 0 1px rgba(111,212,182,.3); }
@@ -535,7 +536,7 @@ kbd { font: 500 10.5px var(--mono); color: var(--encre-2); padding: 2px 6px; bor
 .ou-risque { font: 500 10px var(--police); padding: 1px 7px; border-radius: 999px; color: var(--encre-2); background: rgba(255,255,255,.06); border: 1px solid var(--trait); }
 .ou-risque[data-r="systeme"], .ou-risque[data-r="modifie"], .ou-risque[data-r="variable"] { color: var(--ambre); border-color: rgba(240,179,90,.35); }
 .ou-risque[data-r="web"] { color: var(--src-hermes); border-color: rgba(169,144,242,.35); }
-.ou-outil .ou-risque:not([data-r="systeme"]):not([data-r="modifie"]):not([data-r="variable"]):not([data-r="web"]) { color: var(--vert-clair); border-color: rgba(111,212,182,.3); }
+.ou-risque.mien { color: var(--vert-clair); border-color: rgba(111,212,182,.35); background: rgba(111,212,182,.1); }
 .ou-desc { font-size: 11px; color: var(--encre-3); margin-top: 2px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px; }
 .ou-outil.ouvert .ou-desc { white-space: normal; max-width: none; }
 .ou-detail { display: none; margin-top: 7px; }

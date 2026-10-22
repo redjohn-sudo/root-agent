@@ -639,7 +639,7 @@ function outilLigne(o, i) {
   return `<div class="ou-outil${o.coupe ? " coupe" : ""}" style="--i:${i}" data-id="${o.id}">
     <button class="ou-dep" title="Détails">${svg("chevron", "chevron")}</button>
     <div class="ou-txt">
-      <div class="ou-nom">${echap(o.id)}<span class="ou-risque" data-r="${o.risque}" title="${echap(o.risque_aide)}">${echap(o.risque_nom)}</span></div>
+      <div class="ou-nom">${echap(o.id)}<span class="ou-risque${o.perso ? " mien" : ""}" data-r="${o.risque}" title="${echap(o.risque_aide)}">${echap(o.risque_nom)}</span></div>
       <div class="ou-desc">${echap(o.description)}</div>
       <div class="ou-detail">
         ${o.source ? `<a class="ou-src" href="#" data-url="${echap(o.source)}">${echap(o.source.replace(/^https?:\/\//, ""))}</a>` : ""}
