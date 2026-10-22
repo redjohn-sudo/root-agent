@@ -32,6 +32,7 @@ import conversations   # toutes les conversations, de tous les LLM
 import memoire_edition # voir et retoucher la mémoire durable
 import outils_reglages # le panneau Outils (couper, restreindre, autonomie)
 import outils_externes # registre des outils que Vincent a envoyés (install + détection)
+import ame             # l'âme de Root (socle gravé + couche modulable de Vincent)
 import terminal_shell  # un vrai shell (PTY) dans la fenêtre, piloté par Vincent
 import redteam         # cœur de red team IA (probe/detector/generator/harnais)
 import pentest_journal  # trace durable des campagnes de pentest
@@ -225,7 +226,7 @@ class Pont:
         self.conv_id = conversations.nouvel_id()   # sauvegardée dès le premier message
         self.origine = ""                           # conversation d'un autre outil reprise ici
         self.lecture = None                         # conversation d'un autre outil affichée
-        self.messages = [{"role": "system", "content": root.AME}]
+        self.messages = [{"role": "system", "content": ame.ame_complete()}]
         self._memoire_dans_prompt()
         return True
 
@@ -402,6 +403,39 @@ class Pont:
             return True
         return False
 
+    # ── âme ─────────────────────────────────────────────────────────────────
+    def ame(self):
+        return ame.etat()
+
+    def ame_ton(self, texte):
+        ame.ton(texte)
+        self._ame_rafraichir()
+        return True
+
+    def ame_regle_ajouter(self, texte):
+        ok = ame.ajouter_regle(texte)
+        if ok:
+            self._ame_rafraichir()
+        return ok
+
+    def ame_regle_modifier(self, ancien, nouveau):
+        ok = ame.modifier_regle(ancien, nouveau)
+        if ok:
+            self._ame_rafraichir()
+        return ok
+
+    def ame_regle_retirer(self, texte):
+        ok = ame.retirer_regle(texte)
+        if ok:
+            self._ame_rafraichir()
+        return ok
+
+    def _ame_rafraichir(self):
+        """Met à jour le prompt système actif tout de suite, sans relancer."""
+        if self.messages and self.messages[0].get("role") == "system":
+            self.messages[0]["content"] = ame.ame_complete()
+        self.emettre({"type": "ame"})
+
     # ── mémoire ─────────────────────────────────────────────────────────────
     def memoire(self):
         d = memoire_edition.lire()
@@ -468,7 +502,7 @@ class Pont:
             brut = r["brut"]
             self.messages = brut.get("messages") or [{"role": "system", "content": root.AME}]
             if self.messages and self.messages[0].get("role") == "system":
-                self.messages[0]["content"] = root.AME          # l'âme à jour
+                self.messages[0]["content"] = ame.ame_complete()  # l'âme à jour
             self._memoire_dans_prompt()                         # et la mémoire du jour
             self.conv_id, self.origine, self.lecture = cle.split(":", 1)[1], brut.get("origine", ""), None
             c = cerveaux.par_id(brut.get("cerveau", ""))

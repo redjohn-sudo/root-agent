@@ -16,3 +16,6 @@ reglages.local.json
 
 # Mandat de test red team (local, éditable)
 redteam_mandat.local.txt
+
+# Couche modulable de l'âme (local, éditable)
+ame_perso.local.json

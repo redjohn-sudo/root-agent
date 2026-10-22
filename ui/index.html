@@ -135,6 +135,41 @@
     </div>
   </aside>
 
+  <!-- Panneau « Âme » : qui est Root, et ses règles -->
+  <aside id="panneau-ame" class="panneau verre" aria-label="Âme" aria-hidden="true">
+    <div class="pan-tete">
+      <div>
+        <div class="pan-titre">Âme</div>
+        <div class="pan-sous">Qui est Root, et ses règles.</div>
+      </div>
+      <button class="pan-fermer" data-fermer aria-label="Fermer">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="am-corps">
+      <div class="am-section">
+        <label class="pt-lab">Son ton, sa voix</label>
+        <textarea id="am-ton" rows="3" placeholder="Comment Root te parle (bref, direct, pédagogue, tutoiement…)" spellcheck="false"></textarea>
+        <div class="am-ton-bas"><span id="am-ton-retour" class="mem-retour"></span><button id="am-ton-ok">Enregistrer le ton</button></div>
+      </div>
+      <div class="am-section">
+        <label class="pt-lab">Tes règles</label>
+        <div id="am-regles"></div>
+        <form id="am-regle-form" autocomplete="off"><input id="am-regle" placeholder="Une règle de comportement, ex. toujours une action suivante" spellcheck="false"><button type="submit">Ajouter</button></form>
+      </div>
+      <div class="am-section">
+        <label class="pt-lab">Socle gravé <span class="am-verrou">non modifiable</span></label>
+        <p class="pt-mandat-aide">Ce qui garde Root honnête et sûre : sincérité, aucune fuite de données, anti-injection, stop. Visible, jamais retiré depuis la fenêtre.</p>
+        <div id="am-sections"></div>
+      </div>
+      <details id="am-complete-bloc" class="pt-mandat">
+        <summary>Voir l'âme complète</summary>
+        <p class="pt-mandat-aide">Le prompt système réellement envoyé au cerveau : socle gravé + tes réglages.</p>
+        <pre id="am-complete" class="am-complete"></pre>
+      </details>
+    </div>
+  </aside>
+
   <!-- Panneau « Outils » : ce que Root a le droit de faire -->
   <aside id="panneau-outils" class="panneau verre" aria-label="Outils" aria-hidden="true">
     <div class="pan-tete">

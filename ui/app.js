@@ -19,6 +19,8 @@ const ICONES = {
   outils: '<path d="M10 6.5a3.5 3.5 0 0 0-4.8 4.3l-1.7 1.7 2 2 1.7-1.7A3.5 3.5 0 0 0 11.5 8M13.5 13l4.5 4.5a1.4 1.4 0 0 0 2-2L15.5 11"/>',
   terminal: '<path d="M4.5 5.5h15a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1zM7 10l2.5 2L7 14M12.5 14.5h4"/>',
   cible: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
+  ame: '<path d="M12 20.5s-6.5-4-8.3-8.2C2.3 9 3.8 6 6.8 6c1.8 0 3.2 1.1 3.9 2.3h2.6C14 7.1 15.4 6 17.2 6c3 0 4.5 3 3.1 6.3C18.5 16.5 12 20.5 12 20.5z"/>',
+  cadenas: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
 };
 const svg = (nom, classe = "") => `<svg${classe ? ` class="${classe}"` : ""} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONES[nom]}</svg>`;
 const echap = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -189,6 +191,7 @@ window.rootEvent = function (ev) {
     case "pentest_debut": ptDebut(ev); break;
     case "pentest_progres": ptProgres(ev); break;
     case "pentest_fini": ptFini(ev); break;
+    case "ame": if (PANNEAU === "ame") chargerAme(); break;
     case "outil_installe":
       toast(ev.message, ev.ok);
       if (PANNEAU === "outils") chargerOutils();
@@ -210,6 +213,7 @@ const ICONES_DOCK = [
   { id: "outils", label: "Outils", icone: "outils", kbd: "⌘4", ouvrir: () => basculer("outils") },
   { id: "terminal", label: "Terminal", icone: "terminal", kbd: "⌘5", ouvrir: ouvrirTerminal },
   { id: "pentest", label: "Pentest", icone: "cible", kbd: "⌘6", ouvrir: () => basculer("pentest") },
+  { id: "ame", label: "Âme", icone: "ame", kbd: "⌘7", ouvrir: () => basculer("ame") },
 ];
 function survol(btn, label, kbd) {
   const r = btn.getBoundingClientRect(), d = $("#dock").getBoundingClientRect();
@@ -251,6 +255,7 @@ const PANNEAUX = {
   memoire: { el: $("#panneau-memoire"), ouvrir: () => { rendreMemoire(); chargerMemoire(); setTimeout(() => champFait.focus(), 80); } },
   outils: { el: $("#panneau-outils"), ouvrir: chargerOutils },
   pentest: { el: $("#panneau-pentest"), ouvrir: chargerPentest },
+  ame: { el: $("#panneau-ame"), ouvrir: chargerAme },
 };
 let PANNEAU = null;
 function ouvrirPanneau(nom) {
@@ -1000,6 +1005,7 @@ function entreesPalette(q) {
     { label: "Outils", aide: "Ce que Root a le droit de faire", icone: "outils", kbd: "⌘4", faire: () => ouvrirPanneau("outils") },
     { label: "Terminal", aide: "Un vrai shell, tu tapes dedans", icone: "terminal", kbd: "⌘5", faire: ouvrirTerminal },
     { label: "Pentest", aide: "Attaquer tes cerveaux, voir les failles", icone: "cible", kbd: "⌘6", faire: () => ouvrirPanneau("pentest") },
+    { label: "Âme", aide: "Qui est Root, et ses règles", icone: "ame", kbd: "⌘7", faire: () => ouvrirPanneau("ame") },
     ...convs,
   ];
 }
@@ -1045,6 +1051,7 @@ addEventListener("keydown", e => {
   if (cmd && e.key === "4") { e.preventDefault(); frapper($("#ic-outils")); basculer("outils"); return; }
   if (cmd && e.key === "5") { e.preventDefault(); frapper($("#ic-terminal")); basculerTerminal(); return; }
   if (cmd && e.key === "6") { e.preventDefault(); frapper($("#ic-pentest")); basculer("pentest"); return; }
+  if (cmd && e.key === "7") { e.preventDefault(); frapper($("#ic-ame")); basculer("ame"); return; }
   if (cmd && e.key.toLowerCase() === "n") { e.preventDefault(); nouvelleConversation(); }
 });
 
@@ -1116,7 +1123,53 @@ $("#terminal-neuf").onclick = async () => {
   TERM.focus();
 };
 
-// ── Panneau « Pentest » : attaquer les cerveaux, garder la trace ─────────────
+// ── Panneau « Âme » : qui est Root, et ses règles ───────────────────────────
+let AME = null;
+async function chargerAme() {
+  if (!api()) return;
+  AME = await api().ame();
+  rendreAme();
+}
+function rendreAme() {
+  if (!AME) return;
+  $("#am-ton").value = AME.ton || "";
+  // tes règles
+  const zr = $("#am-regles");
+  zr.innerHTML = AME.regles.length ? AME.regles.map((r, i) =>
+    `<div class="am-regle" data-i="${i}"><div class="am-regle-txt">${echap(r)}</div>
+      <div class="conv-gestes"><button class="r-mod" title="Modifier">${svg("crayon")}</button><button class="r-sup" title="Retirer">${svg("croix")}</button></div></div>`).join("")
+    : '<div class="grp-vide">Aucune règle à toi pour l\'instant.</div>';
+  zr.querySelectorAll(".am-regle").forEach(el => {
+    const txt = el.querySelector(".am-regle-txt"), r = AME.regles[+el.dataset.i];
+    const modifier = () => editer(txt, async nv => { await api().ame_regle_modifier(r, nv); chargerAme(); });
+    el.querySelector(".r-mod").onclick = modifier;
+    txt.ondblclick = modifier;
+    el.querySelector(".r-sup").onclick = () => armer(el.querySelector(".r-sup"), "Retirer ?", async () => { await api().ame_regle_retirer(r); chargerAme(); });
+  });
+  // socle gravé
+  $("#am-sections").innerHTML = AME.sections.map((sec, i) =>
+    `<section class="am-grave${i === 0 ? " ouvert" : ""}" data-i="${i}"><button class="am-grave-tete">${svg("cadenas", "cadenas")}<span>${echap(sec.titre)}</span>${svg("chevron", "chevron")}</button><div class="am-grave-corps"><pre>${echap(sec.contenu)}</pre></div></section>`).join("");
+  $("#am-sections").querySelectorAll(".am-grave-tete").forEach(t => t.onclick = () => t.closest(".am-grave").classList.toggle("ouvert"));
+  // âme complète
+  $("#am-complete").textContent = AME.complete || "";
+}
+$("#am-ton-ok").onclick = async () => {
+  await api().ame_ton($("#am-ton").value);
+  $("#am-ton-retour").textContent = "Ton enregistré."; $("#am-ton-retour").className = "mem-retour";
+  chargerAme();
+};
+$("#am-ton").addEventListener("keydown", e => e.stopPropagation());
+$("#am-ton").addEventListener("input", () => { $("#am-ton-retour").textContent = ""; });
+$("#am-regle-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const v = $("#am-regle").value.trim();
+  if (!v) return;
+  const ok = await api().ame_regle_ajouter(v);
+  if (ok) { $("#am-regle").value = ""; chargerAme(); } else toast("Règle vide ou déjà présente", false);
+});
+$("#am-regle").addEventListener("keydown", e => e.stopPropagation());
+
+// ── Panneau « Pentest » : attaquer les cerveaux, garder la trace ─────────────// ── Panneau « Pentest » : attaquer les cerveaux, garder la trace ─────────────
 let PT = null, PT_PROBES = new Set(), PT_ESSAIS = 1, PT_EN_COURS = false, PT_TYPE = "cloud";
 const fmtPct = t => Math.round((t || 0) * 100) + "%";
 const dateCourteH = ts => { const d = new Date(ts * 1000); const j = joursDepuis(ts);
