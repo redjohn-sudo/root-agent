@@ -369,6 +369,28 @@ def outil_lire_fichier(chemin: str) -> str:
     return securite.rediger_secrets(texte, lecture_fichier=True)  # troncation faite dans un_tour
 
 
+def outil_chercher_code(motif: str, dossier: str = ".", fichiers: str = "") -> str:
+    """Cherche un motif dans le code (ripgrep si présent, sinon grep). Lecture seule."""
+    dossier = str(Path(dossier).expanduser())
+    rg = __import__("shutil").which("rg")
+    if rg:
+        cmd = [rg, "-n", "--no-heading", "-S", "--max-columns", "200"]
+        if fichiers:
+            cmd += ["-g", fichiers]
+        cmd += [motif, dossier]
+    else:
+        cmd = ["grep", "-rn", motif, dossier]
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.SubprocessError) as e:
+        return f"ERREUR recherche : {e}"
+    sortie = r.stdout or r.stderr or ""
+    lignes = sortie.splitlines()
+    if len(lignes) > 200:
+        sortie = "\n".join(lignes[:200]) + f"\n… ({len(lignes) - 200} autres correspondances, affine le motif)"
+    return sortie.strip() or "(aucune correspondance)"
+
+
 def outil_lister(chemin: str = ".") -> str:
     p = Path(chemin).expanduser()
     if not p.is_dir():
@@ -657,6 +679,16 @@ OUTILS = {
         "schema": {"description": "Lire le contenu d'un fichier texte.",
                    "parameters": {"type": "object", "properties": {
                        "chemin": {"type": "string"}}, "required": ["chemin"]}},
+    },
+    "chercher_code": {
+        "fn": outil_chercher_code, "risque": "sûr",
+        "schema": {"description": "Chercher un motif (texte ou regex) dans le code d'un "
+                   "dossier, vite (ripgrep). Pour revue de code, chasse à l'IDOR, repérer "
+                   "un appel. `fichiers` filtre par motif de nom (ex. *.rb). Lecture seule.",
+                   "parameters": {"type": "object", "properties": {
+                       "motif": {"type": "string"},
+                       "dossier": {"type": "string"},
+                       "fichiers": {"type": "string"}}, "required": ["motif"]}},
     },
     "lister": {
         "fn": outil_lister, "risque": "sûr",

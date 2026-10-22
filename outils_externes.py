@@ -171,6 +171,28 @@ OUTILS = [
      "source": "https://github.com/openwall/john",
      "note": "Casser des hash de mots de passe (plus simple que hashcat pour démarrer).",
      "install": ["brew", "install", "john-jumbo"], "detect": ("which", "john")},
+    # ── Revue de code & proxy (bug bounty) ──────────────────────────────────
+    {"id": "ripgrep", "nom": "ripgrep", "role": "revue",
+     "source": "https://github.com/BurntSushi/ripgrep",
+     "note": "Recherche ultra-rapide dans le code (bien mieux que grep sur un gros dépôt).",
+     "install": ["brew", "install", "ripgrep"], "detect": ("which", "rg")},
+    {"id": "semgrep", "nom": "Semgrep", "role": "revue",
+     "source": "https://github.com/semgrep/semgrep",
+     "note": "Analyse statique par motifs avec des règles de sécurité toutes faites : LE outil de revue de code (IDOR, injections…).",
+     "install": PIP + ["install", "semgrep"], "detect": ("which", "semgrep")},
+    {"id": "astgrep", "nom": "ast-grep", "role": "revue",
+     "source": "https://github.com/ast-grep/ast-grep",
+     "note": "Recherche structurelle dans le code (par motif d'AST) : parfait pour « find par id sans check ».",
+     "install": ["brew", "install", "ast-grep"], "detect": ("which", "ast-grep")},
+    {"id": "mitmproxy", "nom": "mitmproxy", "role": "revue",
+     "source": "https://github.com/mitmproxy/mitmproxy",
+     "note": "Proxy HTTP scriptable en Python : Root peut écrire des addons pour intercepter/modifier le trafic AVEC toi.",
+     "install": PIP + ["install", "mitmproxy"], "detect": ("import", "mitmproxy")},
+    {"id": "burpsuite", "nom": "Burp Suite (Community)", "role": "revue",
+     "source": "https://portswigger.net/burp/communitydownload",
+     "note": "Le proxy de référence pour tester une instance vivante. GUI : c'est TON outil manuel, Root ne le pilote pas.",
+     "install": ["brew", "install", "--cask", "burp-suite"],
+     "detect": ("path", "/Applications/Burp Suite Community Edition.app")},
     {"id": "sagemath", "nom": "SageMath", "role": "ctf",
      "source": "https://github.com/sagemath/sage",
      "note": "Le gros calcul mathématique (attaques RSA, réseaux/LLL, courbes). Lourd, à installer à part.",
@@ -180,8 +202,8 @@ OUTILS = [
 PAR_ID = {o["id"]: o for o in OUTILS}
 
 ROLES = {"attaque": "Attaque / éval", "defense": "Défense", "offensif": "Offensif",
-         "ctf": "Boîte à outils CTF", "brique": "Briques", "modele": "Modèles locaux",
-         "reference": "Référence"}
+         "ctf": "Boîte à outils CTF", "revue": "Revue de code & proxy", "brique": "Briques",
+         "modele": "Modèles locaux", "reference": "Référence"}
 
 
 def _installe(o: dict) -> bool:
@@ -212,7 +234,7 @@ def etat() -> dict:
             "installable": o["install"] is not None,
             "commande": " ".join(o["install"]) if o["install"] else "",
         })
-    ordre = ["attaque", "defense", "offensif", "ctf", "modele", "brique", "reference"]
+    ordre = ["attaque", "defense", "offensif", "ctf", "revue", "modele", "brique", "reference"]
     return {"total": len(OUTILS),
             "installes": sum(1 for o in OUTILS if _installe(o)),
             "groupes": [{"role": r, "titre": ROLES[r], "outils": groupes[r]}

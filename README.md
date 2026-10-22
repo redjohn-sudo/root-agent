@@ -26,7 +26,7 @@ Installation des dépendances : voir `INSTALL.md` (plus `pywebview` pour la fen�
   vérification de Codex, recherche de Claude cloud, action, sécurité, lecture,
   immunité, consentement, entendre de Claude Code).
 - `outils_externes.py` : le registre, dans le code, de tous les outils que Vincent
-  veut dans Root (34 : red team, défense, offensif, boîte à outils CTF crypto/pwn/reverse/stégano, briques, modèles locaux). Chacun
+  veut dans Root (39 : red team, défense, offensif, boîte à outils CTF, revue de code & proxy, briques, modèles locaux). Chacun
   avec sa source, son rôle, sa détection et sa commande d'installation. Le panneau
   Outils les montre avec leur état et un bouton « Installer » (pip / npm / brew).
 - `sandbox.py` + outil `executer_script` : Root écrit et lance son propre code
