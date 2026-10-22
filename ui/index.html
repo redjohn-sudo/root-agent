@@ -105,7 +105,29 @@
         <div id="ou-mode-choix" class="ou-seg"></div>
       </div>
       <div class="ou-pre" id="ou-pre"></div>
+      <label class="conv-cherche ou-cherche">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+        <input id="ou-cherche" placeholder="Chercher un outil…" autocomplete="off" spellcheck="false">
+      </label>
       <div id="ou-familles"></div>
+      <section class="grp projet ou-avance plie" id="ou-mes" data-cle="o:mes">
+        <button class="grp-tete"><svg viewBox="0 0 24 24" class="chevron" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m7 10 5 5 5-5"/></svg><span class="grp-nom">Mes outils</span><span class="grp-n" id="ou-mes-n">0</span></button>
+        <div class="grp-corps"><div class="ou-mes-corps">
+          <div class="ou-mes-liste" id="ou-mes-liste"></div>
+          <div class="ou-mes-ajout">
+            <input id="ou-gh" placeholder="Coller un lien GitHub (ex. github.com/p-e-w/heretic)…" autocomplete="off" spellcheck="false">
+            <button id="ou-gh-lire" type="button">Lire</button>
+          </div>
+          <form id="ou-perso-form" hidden autocomplete="off">
+            <input id="op-nom" placeholder="Nom de l'outil" spellcheck="false">
+            <textarea id="op-desc" rows="2" placeholder="Ce que fait l'outil, et quand Root doit l'utiliser"></textarea>
+            <input id="op-cmd" placeholder="Commande à lancer (ex. heretic --model …)" spellcheck="false">
+            <label class="op-case"><input type="checkbox" id="op-arg"><span class="mini-interr"></span>Root peut ajouter un argument à la fin</label>
+            <label class="op-case"><input type="checkbox" id="op-demande" checked><span class="mini-interr"></span>Demander mon accord à chaque usage</label>
+            <div class="op-bas"><span id="op-retour" class="mem-retour"></span><button type="button" id="op-annuler">Annuler</button><button type="submit" id="op-ok">Ajouter l\'outil</button></div>
+          </form>
+        </div></div>
+      </section>
       <section class="grp projet ou-avance" id="ou-avance" data-cle="o:avance">
         <button class="grp-tete">
           <svg viewBox="0 0 24 24" class="chevron" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m7 10 5 5 5-5"/></svg>

@@ -97,3 +97,50 @@ class TestAutoTerminal(Base):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@unittest.skipUnless(DISPO, "rich absent")
+class TestMesOutils(Base):
+    def test_ajouter_expose_au_cerveau_et_executer(self):
+        import shutil as sh
+        echo = sh.which("echo")
+        r = ou.ajouter_outil_perso("Mon echo", "Répète un texte", [echo], argument=True, toujours_demander=True)
+        self.assertTrue(r["ok"])
+        ident = r["id"]
+        self.assertIn(ident, root.OUTILS)
+        self.assertIn(ident, root.OUTILS_PERSO)
+        self.assertIn(ident, [f["function"]["name"] for f in root.schema_pour_deepseek()])
+        # risque « demande » → toujours demander
+        self.assertTrue(root.doit_demander(ident, {}))
+        # exécution réelle
+        self.assertEqual(root.OUTILS[ident]["fn"](argument="coucou"), "coucou")
+
+    def test_commande_introuvable_rend_une_erreur_pas_un_plantage(self):
+        r = ou.ajouter_outil_perso("Fantome", "n'existe pas", ["commande_qui_nexiste_pas_123"])
+        self.assertIn("introuvable", root.OUTILS[r["id"]]["fn"]())
+
+    def test_ne_pas_ecraser_un_outil_du_moteur(self):
+        r = ou.ajouter_outil_perso("terminal", "tentative d'écrasement", ["echo"])
+        self.assertNotEqual(r["id"], "terminal")
+        self.assertIn("fn", root.OUTILS["terminal"])          # l'outil du moteur intact
+        self.assertNotIn("terminal", root.OUTILS_PERSO)
+
+    def test_retirer(self):
+        r = ou.ajouter_outil_perso("Jetable", "temporaire", ["echo"])
+        ou.retirer_outil_perso(r["id"])
+        self.assertNotIn(r["id"], root.OUTILS)
+        self.assertNotIn(r["id"], root.OUTILS_PERSO)
+
+    def test_refus_sans_nom_ou_commande(self):
+        self.assertFalse(ou.ajouter_outil_perso("", "desc", ["echo"])["ok"])
+        self.assertFalse(ou.ajouter_outil_perso("X", "desc", [])["ok"])
+
+    def test_lien_non_github_refuse(self):
+        self.assertFalse(ou.lire_readme_github("https://exemple.com/truc")["ok"])
+
+    def test_mes_outils_dans_etat(self):
+        ou.ajouter_outil_perso("Scanner", "lance un scan", ["echo"], source="https://github.com/x/y")
+        fam = ou.etat()["familles"][0]
+        self.assertEqual(fam["titre"], "Mes outils")
+        self.assertTrue(fam["perso"])
+        self.assertEqual(fam["outils"][0]["risque_nom"], "Mien")

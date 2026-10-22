@@ -33,13 +33,19 @@ Installation des dépendances : voir `INSTALL.md` (plus `pywebview` pour la fen�
 Une icône = un panneau. Faits : **Cerveaux** (⌘1), **Conversations** (⌘2), **Mémoire** (⌘3) et **Outils** (⌘4).
 À venir, un par un : Âme, Actions, Réglages, et Comparer.
 
-**Outils** (`outils_reglages.py`) montre les 36 outils par famille, avec leur
-risque. On coupe un outil (il n'est plus proposé au cerveau), on le rend plus
-strict (toujours demander), on choisit l'autonomie et des préréglages. Une option
-éteinte par défaut, « commandes sans confirmation », laisse Vincent lister les
-préfixes de commandes terminal qui tournent sans accord en autonomie large, pour
-ses labos et ses CTF. Les règles de sécurité du moteur ne sont jamais affaiblies :
-on ne fait qu'ajouter ou retirer des demandes, sur décision explicite.
+**Outils** (`outils_reglages.py`) : les outils par famille (repliées par défaut,
+avec une recherche), chacun avec son risque. On coupe un outil (il n'est plus
+proposé au cerveau), on le rend plus strict (toujours demander), on choisit
+l'autonomie et des préréglages. Option éteinte par défaut, « commandes sans
+confirmation » : Vincent liste les préfixes de commandes terminal qui tournent
+sans accord en autonomie large, pour ses labos et ses CTF.
+
+**Mes outils** : Vincent déclare ses propres outils (une commande locale, ou un
+dépôt GitHub qu'il a installé). Il colle un lien, Root lit le README pour préparer
+une fiche, Vincent complète et valide ; rien ne s'installe ni ne s'exécute tout
+seul. L'outil passe ensuite par les mêmes autorisations que les autres. Les règles
+de sécurité du moteur ne sont jamais affaiblies : on n'ajoute ou ne retire que des
+demandes, sur décision explicite.
 
 **Conversations** rassemble celles de Root, Claude Code, Codex et Hermes
 (`conversations.py`), rangées par projet, cherchables dans tout leur texte. Les
@@ -61,4 +67,4 @@ autoriser ou refuser une action de Root.
 ~/.local/root-venv/bin/python -m unittest discover -p "test_*.py"
 ```
 
-467 tests au 22/10/2026, hors réseau.
+474 tests au 22/10/2026, hors réseau.

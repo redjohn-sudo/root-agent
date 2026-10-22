@@ -97,6 +97,7 @@ AUTONOMIE = "large"
 # ne l'a pas activée lui-même et n'a pas listé ce qu'il autorise.
 OUTILS_COUPES: set[str] = set()
 OUTILS_STRICTS: set[str] = set()
+OUTILS_PERSO: set[str] = set()      # noms des outils ajoutés par Vincent (outils_reglages)
 TERMINAL_AUTO_ACTIF = False
 TERMINAL_AUTO: list[str] = []
 

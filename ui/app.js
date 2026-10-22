@@ -600,14 +600,21 @@ function rendreOutils() {
     `<button data-p="${p.id}"${OU.actif === p.id ? ' class="on"' : ""} title="${echap(p.aide)}">${echap(p.nom)}</button>`).join("");
   $("#ou-pre").querySelectorAll("button").forEach(b => b.onclick = async () => { await api().outils_prereglage(b.dataset.p); chargerOutils(); });
 
+  const q = normal(($("#ou-cherche") || {}).value || "");
   let i = 0;
-  $("#ou-familles").innerHTML = OU.familles.map(f => {
-    const cle = "o:" + f.titre, plie = plies.has(cle);
+  $("#ou-familles").innerHTML = OU.familles.filter(f => !f.perso).map(f => {
+    const cle = "o:" + f.titre;
+    const outils = q ? f.outils.filter(o => normal(o.id + " " + o.description).includes(q)) : f.outils;
+    if (!outils.length) return "";
+    // replié par défaut : on n'ouvre que si Vincent l'a ouvert, ou si on cherche
+    const plie = !q && !ouvertsOutils.has(cle);
     const actifs = f.outils.filter(o => !o.coupe).length;
     return `<section class="grp projet${plie ? " plie" : ""}" data-cle="${echap(cle)}">
       <button class="grp-tete">${svg("chevron", "chevron")}<span class="grp-nom">${echap(f.titre)}</span><span class="grp-n">${actifs}/${f.outils.length}</span></button>
-      <div class="grp-corps"><div>${f.outils.map(o => outilLigne(o, i++)).join("")}</div></div></section>`;
-  }).join("");
+      <div class="grp-corps"><div>${outils.map(o => outilLigne(o, i++)).join("")}</div></div></section>`;
+  }).join("") || '<div class="conv-vide">Aucun outil pour cette recherche.</div>';
+  rendreMesOutils();
+  brancherOutils();
 
   const av = $("#ou-avance"), ta = OU.terminal_auto;
   av.classList.toggle("actif", ta.actif);
@@ -621,36 +628,57 @@ function rendreOutils() {
     const reste = ta.prefixes.filter((_, k) => k !== +b.dataset.k);
     await api().terminal_auto_prefixes(reste); chargerOutils();
   });
-  brancherGroupes("#ou-familles");
 }
 function outilLigne(o, i) {
   const fige = o.verrouille_demande;
+  const retrait = o.perso ? `<button class="ou-perso-x" title="Retirer cet outil">${svg("croix")}</button>` : "";
   return `<div class="ou-outil${o.coupe ? " coupe" : ""}" style="--i:${i}" data-id="${o.id}">
+    <button class="ou-dep" title="Détails">${svg("chevron", "chevron")}</button>
     <div class="ou-txt">
       <div class="ou-nom">${echap(o.id)}<span class="ou-risque" data-r="${o.risque}" title="${echap(o.risque_aide)}">${echap(o.risque_nom)}</span></div>
       <div class="ou-desc">${echap(o.description)}</div>
-      <div class="ou-reglages">
-        <label class="${fige ? "fige" : ""}" title="${fige ? "Cet outil demande toujours, c'est un garde-fou" : "Demander mon accord à chaque fois"}">
-          <input type="checkbox" class="strict"${o.strict || fige ? " checked" : ""}${fige ? " disabled" : ""}><span class="mini-interr"></span>Demander</label>
+      <div class="ou-detail">
+        ${o.source ? `<a class="ou-src" href="#" data-url="${echap(o.source)}">${echap(o.source.replace(/^https?:\/\//, ""))}</a>` : ""}
+        ${o.commande ? `<code class="ou-cmd">${echap(o.commande)}</code>` : ""}
+        <div class="ou-reglages">
+          <label class="${fige ? "fige" : ""}" title="${fige ? "Cet outil demande toujours, c'est un garde-fou" : "Demander mon accord à chaque fois"}">
+            <input type="checkbox" class="strict"${o.strict || fige ? " checked" : ""}${fige ? " disabled" : ""}><span class="mini-interr"></span>Demander mon accord</label>
+          ${retrait}
+        </div>
       </div>
     </div>
-    <label title="${o.coupe ? "Activer" : "Couper : Root ne pourra plus l'utiliser"}"><input type="checkbox" class="actif"${o.coupe ? "" : " checked"}><span class="interr"></span></label>
+    <label class="ou-bascule-c" title="${o.coupe ? "Activer" : "Couper : Root ne pourra plus l'utiliser"}"><input type="checkbox" class="actif"${o.coupe ? "" : " checked"}><span class="interr"></span></label>
   </div>`;
 }
-function brancherGroupes(sel) {
-  document.querySelectorAll(`${sel} .grp, #ou-avance`).forEach(g => {
-    const tete = g.querySelector(".grp-tete");
-    tete.onclick = () => {
+function rendreMesOutils() {
+  const f = OU.familles.find(x => x.perso), liste = $("#ou-mes-liste");
+  $("#ou-mes-n").textContent = f ? f.outils.length : 0;
+  let i = 0;
+  liste.innerHTML = f ? f.outils.map(o => outilLigne(o, i++)).join("") : '<div class="grp-vide">Aucun outil à toi pour l\'instant.</div>';
+}
+function brancherOutils() {
+  document.querySelectorAll("#ou-familles .grp").forEach(g => {
+    g.querySelector(".grp-tete").onclick = () => { g.classList.toggle("plie"); basculerFamilleOutil(g.dataset.cle); };
+  });
+  ["#ou-avance", "#ou-mes"].forEach(id => {
+    const g = $(id); if (!g) return;
+    g.querySelector(".grp-tete").onclick = () => {
       g.classList.toggle("plie");
       g.classList.contains("plie") ? plies.add(g.dataset.cle) : plies.delete(g.dataset.cle);
       memoriserPlies();
     };
   });
-  document.querySelectorAll(`${sel} .ou-outil`).forEach(el => {
+  document.querySelectorAll(".ou-outil").forEach(el => {
     const id = el.dataset.id;
     el.querySelector(".actif").onchange = async e => { await api().outil_basculer(id, !e.target.checked); chargerOutils(); };
     const st = el.querySelector(".strict:not(:disabled)");
     if (st) st.onchange = async e => { await api().outil_strict(id, e.target.checked); };
+    const dep = el.querySelector(".ou-dep");
+    if (dep) dep.onclick = () => el.classList.toggle("ouvert");
+    const x = el.querySelector(".ou-perso-x");
+    if (x) x.onclick = () => armer(x, "Retirer ?", async () => { await api().outil_perso_retirer(id); chargerOutils(); });
+    const src = el.querySelector(".ou-src");
+    if (src) src.onclick = e => { e.preventDefault(); ouvrirLien(src.dataset.url); };
   });
 }
 $("#ou-auto-actif").onchange = async e => {
@@ -665,6 +693,59 @@ $("#ou-prefixe-ajout").addEventListener("submit", async e => {
   champ.value = ""; chargerOutils();
 });
 $("#ou-prefixe-champ").addEventListener("keydown", e => e.stopPropagation());
+
+// familles d'outils : repliées par défaut, Vincent ouvre celles qu'il veut
+const ouvertsOutils = new Set((() => { try { return JSON.parse(localStorage.getItem("root.ouvertsOutils") || "[]"); } catch { return []; } })());
+function basculerFamilleOutil(cle) {
+  ouvertsOutils.has(cle) ? ouvertsOutils.delete(cle) : ouvertsOutils.add(cle);
+  try { localStorage.setItem("root.ouvertsOutils", JSON.stringify([...ouvertsOutils])); } catch { /* sans stockage */ }
+}
+function ouvrirLien(url) { if (api() && api().ouvrir_lien) api().ouvrir_lien(url); }
+
+const chercheOutil = $("#ou-cherche");
+let minuterieOutil;
+chercheOutil.addEventListener("input", () => { clearTimeout(minuterieOutil); minuterieOutil = setTimeout(rendreOutils, 120); });
+chercheOutil.addEventListener("keydown", e => { e.stopPropagation(); if (e.key === "Escape") { chercheOutil.value = ""; rendreOutils(); } });
+
+// Mes outils : lire un README GitHub pour préremplir, puis Vincent valide
+const ghChamp = $("#ou-gh"), form = $("#ou-perso-form"), opRetour = $("#op-retour");
+$("#ou-gh-lire").onclick = async () => {
+  const url = ghChamp.value.trim();
+  if (!url || !api()) return;
+  $("#ou-gh-lire").textContent = "…";
+  const r = await api().outil_depuis_github(url);
+  $("#ou-gh-lire").textContent = "Lire";
+  if (!r.ok) return toast(r.message, false);
+  ouvrirFormOutil(r);
+};
+function ouvrirFormOutil(pre) {
+  form.hidden = false;
+  $("#op-nom").value = pre?.nom || "";
+  $("#op-desc").value = pre?.readme ? resumeReadme(pre.readme) : "";
+  $("#op-cmd").value = pre?.nom ? pre.nom.toLowerCase() : "";
+  form.dataset.source = pre?.source || "";
+  opRetour.textContent = pre?.readme_manquant ? "README introuvable : décris l'outil toi-même." : "Vérifie et complète, puis ajoute.";
+  opRetour.className = "mem-retour";
+  $("#op-nom").focus();
+}
+function resumeReadme(txt) {
+  const lignes = txt.split("\n").map(l => l.replace(/^#+\s*/, "").trim())
+    .filter(l => l && !l.startsWith("![") && !l.startsWith("[!") && !/^[-=*_]{3,}$/.test(l));
+  return lignes.slice(0, 3).join(" ").slice(0, 240);
+}
+$("#op-annuler").onclick = () => { form.hidden = true; ghChamp.value = ""; };
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+  const nom = $("#op-nom").value.trim(), desc = $("#op-desc").value.trim(), cmd = $("#op-cmd").value.trim();
+  if (!nom || !desc || !cmd) { opRetour.className = "mem-retour ko"; opRetour.textContent = "Nom, description et commande sont nécessaires."; return; }
+  const r = await api().outil_perso_ajouter(nom, desc, cmd, $("#op-arg").checked, "", $("#op-demande").checked, form.dataset.source || "");
+  if (!r.ok) { opRetour.className = "mem-retour ko"; opRetour.textContent = r.message; return; }
+  form.hidden = true; ghChamp.value = "";
+  plies.delete("o:mes"); memoriserPlies();
+  await chargerOutils();
+  toast(`« ${nom} » ajouté à tes outils`);
+});
+[ "#op-nom", "#op-desc", "#op-cmd", "#ou-gh" ].forEach(s => $(s).addEventListener("keydown", e => e.stopPropagation()));
 
 // ── Panneau « Mémoire » : ce que Root sait de toi ────────────────────────────
 const listeM = $("#mem-liste"), champFait = $("#mem-fait"), retourM = $("#mem-retour");

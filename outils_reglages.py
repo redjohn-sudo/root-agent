@@ -10,7 +10,17 @@ du moteur n'est affaiblie, on ne fait que RETIRER ou AJOUTER des demandes.
 
 from __future__ import annotations
 
+import re
+import shutil
+import subprocess
+import urllib.error
+import urllib.request
+import uuid
+from pathlib import Path
+
 import root
+
+CHEMINS_CMD = [Path.home() / "bin", Path.home() / ".local" / "bin", Path("/opt/homebrew/bin"), Path("/usr/bin")]
 
 FAMILLES = [
     ("Fichiers et terminal", ["lire_fichier", "lister", "ecrire_fichier", "terminal"]),
@@ -67,6 +77,17 @@ def etat() -> dict:
     """Tout ce que le panneau affiche : familles, outils, autonomie, préréglages."""
     reg = _outils_reglages()
     familles = []
+    perso = outils_perso()
+    if perso:
+        outils = []
+        for d in perso:
+            outils.append({"id": d["id"], "risque": RISQUE_PERSO.get(d.get("risque"), "modifie"),
+                           "risque_nom": "Mien", "risque_aide": "outil que tu as ajouté",
+                           "description": d["description"], "coupe": bool(reg.get(d["id"], {}).get("coupe")),
+                           "strict": bool(reg.get(d["id"], {}).get("strict")),
+                           "verrouille_demande": d.get("risque") == "demande",
+                           "perso": True, "source": d.get("source", ""), "commande": " ".join(d["commande"])})
+        familles.append({"titre": "Mes outils", "perso": True, "outils": outils})
     for titre, noms in FAMILLES:
         outils = []
         for nom in noms:
@@ -165,6 +186,123 @@ def terminal_auto_prefixes(prefixes: list) -> bool:
     return True
 
 
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Mes outils : des outils que Vincent déclare lui-même (une commande locale, ou
+# un dépôt GitHub qu'il a installé). Root les propose au cerveau comme les
+# autres, et ils passent par les MÊMES autorisations. Rien ne s'installe ni ne
+# s'exécute tout seul : Vincent écrit la commande et valide.
+# ─────────────────────────────────────────────────────────────────────────────
+
+RISQUE_PERSO = {"demande": "modifie", "libre": "variable"}   # « demande » = toujours demander
+
+
+def outils_perso() -> list[dict]:
+    return list(_reglages_lire().get("outils_perso", []))
+
+
+def _slug(nom: str) -> str:
+    base = re.sub(r"[^a-z0-9]+", "_", nom.strip().lower()).strip("_") or "outil"
+    return base[:40]
+
+
+def ajouter_outil_perso(nom, description, commande, argument=False, quand="",
+                        toujours_demander=True, source="") -> dict:
+    """Déclare un outil. `commande` est une liste (pas de shell) ; si `argument`,
+    le cerveau peut passer un texte ajouté à la fin. Refuse d'écraser un outil du
+    moteur. Ne lance ni n'installe rien."""
+    nom = (nom or "").strip()
+    if not nom or not description.strip():
+        return {"ok": False, "message": "Il faut au moins un nom et une description."}
+    cmd = [str(x) for x in commande if str(x).strip()] if isinstance(commande, list) else           [m for m in re.split(r"\s+", str(commande).strip()) if m]
+    if not cmd:
+        return {"ok": False, "message": "Il faut une commande à lancer."}
+    ident = _slug(nom)
+    socle = {n for n in root.OUTILS if n not in root.OUTILS_PERSO}
+    if ident in socle:
+        ident += "_" + uuid.uuid4().hex[:3]
+    perso = outils_perso()
+    d = {"id": ident, "nom": nom, "description": description.strip(), "commande": cmd,
+         "argument": bool(argument), "quand": quand.strip(),
+         "risque": "demande" if toujours_demander else "libre", "source": source.strip()}
+    perso = [o for o in perso if o["id"] != ident] + [d]
+    _sauver_perso(perso)
+    return {"ok": True, "message": f"« {nom} » ajouté.", "id": ident}
+
+
+def retirer_outil_perso(ident: str) -> bool:
+    perso = [o for o in outils_perso() if o["id"] != ident]
+    _sauver_perso(perso)
+    return True
+
+
+def _sauver_perso(perso: list) -> None:
+    from fenetre import ecrire_reglages
+    ecrire_reglages(outils_perso=perso)
+    appliquer_au_moteur()
+
+
+def _fn_perso(d: dict):
+    """Fabrique la fonction qu'appelle le cerveau : lance la commande (sans shell),
+    rend sa sortie. L'argument éventuel est ajouté comme UN seul argument."""
+    def faire(argument: str = "", **_ignore):
+        cmd = list(d["commande"])
+        if d.get("argument") and argument:
+            cmd.append(str(argument))
+        exe = shutil.which(cmd[0]) or next(
+            (str(p / cmd[0]) for p in CHEMINS_CMD if (p / cmd[0]).exists()), None)
+        if exe is None:
+            return f"ERREUR : commande introuvable « {cmd[0]} ». Installe-la d'abord."
+        try:
+            r = subprocess.run([exe, *cmd[1:]], capture_output=True, text=True, timeout=120)
+        except subprocess.TimeoutExpired:
+            return "ERREUR : la commande a dépassé 120 s."
+        except OSError as e:
+            return f"ERREUR au lancement : {e}"
+        sortie = (r.stdout or "") + (("\n" + r.stderr) if r.stderr else "")
+        return sortie.strip() or f"(code {r.returncode}, aucune sortie)"
+    return faire
+
+
+def _appliquer_perso() -> None:
+    for n in list(root.OUTILS_PERSO):
+        root.OUTILS.pop(n, None)
+    root.OUTILS_PERSO = set()
+    for d in outils_perso():
+        props = {"argument": {"type": "string", "description": d.get("quand") or "argument à passer"}} \
+            if d.get("argument") else {}
+        root.OUTILS[d["id"]] = {
+            "fn": _fn_perso(d), "risque": RISQUE_PERSO.get(d.get("risque"), "modifie"), "perso": True,
+            "schema": {"description": d["description"],
+                       "parameters": {"type": "object", "properties": props, "required": []}}}
+        root.OUTILS_PERSO.add(d["id"])
+
+
+def lire_readme_github(url: str) -> dict:
+    """Lit le README d'un dépôt GitHub pour PRÉPARER une fiche d'outil. N'installe
+    rien, ne lance rien. Renvoie un brouillon que Vincent complète et valide."""
+    m = re.search(r"github\.com/([^/\s]+)/([^/\s#?]+)", url or "")
+    if not m:
+        return {"ok": False, "message": "Donne un lien de dépôt GitHub (github.com/…)."}
+    proprio, depot = m.group(1), m.group(2).removesuffix(".git")
+    texte = None
+    for branche in ("main", "master"):
+        for nom in ("README.md", "readme.md", "README.rst", "README"):
+            u = f"https://raw.githubusercontent.com/{proprio}/{depot}/{branche}/{nom}"
+            try:
+                req = urllib.request.Request(u, headers={"User-Agent": "root-terminal"})
+                with urllib.request.urlopen(req, timeout=12) as r:
+                    texte = r.read(60000).decode("utf-8", "replace")
+                    break
+            except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError):
+                continue
+        if texte:
+            break
+    return {"ok": True, "nom": depot, "source": f"https://github.com/{proprio}/{depot}",
+            "readme": texte or "", "readme_manquant": texte is None}
+
+
 def appliquer_au_moteur() -> None:
     """Pousse les choix de Vincent dans les variables du moteur (root.py).
     Appelé au démarrage de la fenêtre et après chaque changement."""
@@ -177,6 +315,7 @@ def appliquer_au_moteur() -> None:
     mode = reg.get("autonomie")
     if mode in ("prudente", "large"):
         root.AUTONOMIE = mode
+    _appliquer_perso()
 
 
 def _ecrire(nom: str, **valeurs) -> None:

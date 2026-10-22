@@ -523,16 +523,26 @@ kbd { font: 500 10.5px var(--mono); color: var(--encre-2); padding: 2px 6px; bor
 .ou-pre button:hover { background: rgba(255,255,255,.08); }
 .ou-pre button.on { color: var(--encre); border-color: rgba(111,212,182,.5); background: rgba(111,212,182,.13); }
 #ou-familles .grp { margin-top: 0; }
-.ou-outil { display: flex; align-items: flex-start; gap: 10px; padding: 9px 10px; border-radius: 12px; transition: background .2s var(--ease), opacity .3s; animation: arrive .4s var(--ease-out) both; animation-delay: calc(var(--i,0) * 14ms); }
+.ou-outil { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 11px; transition: background .2s var(--ease), opacity .3s; animation: arrive .4s var(--ease-out) both; animation-delay: calc(var(--i,0) * 10ms); }
 .ou-outil:hover { background: rgba(255,255,255,.05); }
-.ou-outil.coupe { opacity: .45; }
+.ou-outil.coupe { opacity: .42; }
+.ou-dep { width: 20px; height: 20px; flex: none; display: grid; place-items: center; color: var(--encre-3); border-radius: 6px; transition: background .2s, color .2s; }
+.ou-dep:hover { background: rgba(255,255,255,.08); color: var(--encre); }
+.ou-dep .chevron { width: 13px; height: 13px; transition: transform .3s var(--ease-out); transform: rotate(-90deg); }
+.ou-outil.ouvert .ou-dep .chevron { transform: rotate(0); }
 .ou-txt { flex: 1; min-width: 0; }
-.ou-nom { font: 13px var(--mono); color: var(--encre); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ou-nom { font: 12.5px var(--mono); color: var(--encre); display: flex; align-items: center; gap: 7px; }
 .ou-risque { font: 500 10px var(--police); padding: 1px 7px; border-radius: 999px; color: var(--encre-2); background: rgba(255,255,255,.06); border: 1px solid var(--trait); }
 .ou-risque[data-r="systeme"], .ou-risque[data-r="modifie"], .ou-risque[data-r="variable"] { color: var(--ambre); border-color: rgba(240,179,90,.35); }
 .ou-risque[data-r="web"] { color: var(--src-hermes); border-color: rgba(169,144,242,.35); }
-.ou-desc { font-size: 11.5px; color: var(--encre-3); margin-top: 3px; line-height: 1.45; }
-.ou-reglages { display: flex; align-items: center; gap: 12px; margin-top: 7px; }
+.ou-outil .ou-risque:not([data-r="systeme"]):not([data-r="modifie"]):not([data-r="variable"]):not([data-r="web"]) { color: var(--vert-clair); border-color: rgba(111,212,182,.3); }
+.ou-desc { font-size: 11px; color: var(--encre-3); margin-top: 2px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px; }
+.ou-outil.ouvert .ou-desc { white-space: normal; max-width: none; }
+.ou-detail { display: none; margin-top: 7px; }
+.ou-outil.ouvert .ou-detail { display: block; animation: arrive .3s var(--ease-out); }
+.ou-src { display: inline-block; font: 11px var(--mono); color: var(--vert-clair); margin-bottom: 6px; }
+.ou-cmd { display: block; font: 11px var(--mono); color: var(--encre-2); background: rgba(0,0,0,.28); padding: 6px 9px; border-radius: 8px; margin-bottom: 8px; overflow-x: auto; white-space: nowrap; }
+.ou-reglages { display: flex; align-items: center; gap: 12px; margin-top: 2px; }
 .ou-reglages label { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--encre-2); cursor: pointer; }
 .ou-reglages label.fige { opacity: .5; cursor: default; }
 .ou-bascule { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12.5px; color: var(--encre); cursor: pointer; }
@@ -565,3 +575,27 @@ input:checked + .mini-interr::after { transform: translateX(12px); background: v
 #ou-prefixe-ajout button { padding: 0 13px; border-radius: 9px; font-size: 12.5px; color: var(--encre-2); background: rgba(255,255,255,.06); border: 1px solid var(--trait); transition: background .2s, color .2s; }
 #ou-prefixe-ajout button:hover { color: var(--encre); background: rgba(255,255,255,.1); }
 .ou-avance[data-eteint] .ou-prefixes, .ou-avance[data-eteint] #ou-prefixe-ajout { opacity: .4; pointer-events: none; }
+
+/* Outils : la recherche et « Mes outils » */
+.ou-cherche { margin: 0; }
+.ou-bascule-c { flex: none; }
+#ou-mes .grp-n { color: var(--vert-clair); }
+.ou-mes-corps { padding: 6px 8px 10px; display: flex; flex-direction: column; gap: 10px; }
+.ou-mes-liste:empty { display: none; }
+.ou-mes-ajout { display: flex; gap: 7px; }
+#ou-gh { flex: 1; padding: 8px 10px; border-radius: 10px; font: 12px var(--mono); color: var(--encre); background: rgba(0,0,0,.25); border: 1px solid var(--trait); outline: 0; transition: border-color .2s; }
+#ou-gh:focus { border-color: rgba(111,212,182,.5); }
+#ou-gh-lire { padding: 0 14px; border-radius: 10px; font-size: 12.5px; color: var(--encre); background: rgba(111,212,182,.14); border: 1px solid rgba(111,212,182,.3); transition: background .2s; }
+#ou-gh-lire:hover { background: rgba(111,212,182,.22); }
+#ou-perso-form { display: flex; flex-direction: column; gap: 8px; padding: 11px; border-radius: 13px; background: rgba(0,0,0,.2); border: 1px solid rgba(111,212,182,.3); animation: arrive .35s var(--ease-out); }
+#ou-perso-form[hidden] { display: none; }
+#ou-perso-form input, #ou-perso-form textarea { border: 0; outline: 0; background: rgba(255,255,255,.05); border: 1px solid var(--trait); border-radius: 9px; padding: 8px 10px; color: var(--encre); font: 12.5px var(--police); transition: border-color .2s; }
+#ou-perso-form input:focus, #ou-perso-form textarea:focus { border-color: rgba(111,212,182,.5); }
+#op-cmd { font-family: var(--mono); font-size: 12px; }
+#op-desc { resize: none; }
+.op-case { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--encre-2); cursor: pointer; }
+.op-case input { position: absolute; opacity: 0; width: 0; height: 0; }
+.op-bas { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+.op-bas .mem-retour { flex: 1; }
+#op-annuler { padding: 7px 12px; border-radius: 9px; font-size: 12.5px; color: var(--encre-2); background: rgba(255,255,255,.06); border: 1px solid var(--trait); }
+#op-ok { padding: 7px 13px; border-radius: 9px; font-size: 12.5px; font-weight: 600; color: #06120e; background: var(--vert); box-shadow: 0 0 14px var(--lueur); }

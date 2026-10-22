@@ -255,6 +255,22 @@ class Pont:
     def terminal_auto_prefixes(self, prefixes):
         return outils_reglages.terminal_auto_prefixes(prefixes)
 
+    # Mes outils (ajoutés par Vincent)
+    def outil_perso_ajouter(self, nom, description, commande, argument=False, quand="", toujours_demander=True, source=""):
+        return outils_reglages.ajouter_outil_perso(nom, description, commande, argument, quand, toujours_demander, source)
+
+    def outil_perso_retirer(self, ident):
+        return outils_reglages.retirer_outil_perso(ident)
+
+    def outil_depuis_github(self, url):
+        return outils_reglages.lire_readme_github(url)
+
+    def ouvrir_lien(self, url):
+        if isinstance(url, str) and url.startswith(("http://", "https://")):
+            subprocess.Popen(["open", "-a", "Brave Browser", url])
+            return True
+        return False
+
     # ── mémoire ─────────────────────────────────────────────────────────────
     def memoire(self):
         d = memoire_edition.lire()
