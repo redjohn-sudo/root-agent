@@ -407,18 +407,21 @@ def outil_ecrire_fichier(chemin: str, contenu: str) -> str:
 
 def capturer_ecran() -> Path:
     """Prend une capture silencieuse de l'écran principal et renvoie son chemin.
-    `screencapture -x` = sans le son d'obturateur. Nécessite l'autorisation
-    « Enregistrement de l'écran » pour le terminal (macOS la demande une fois).
-    On réduit l'image (large 1680 px) pour qu'elle parte vite, sans perdre le texte."""
+    `screencapture -x` = sans le son d'obturateur ; demande l'autorisation
+    « Enregistrement de l'écran » à l'app (macOS la demande une fois). On réduit
+    l'image à 1680 px de large avec `sips` (toujours présent sur macOS, aucune
+    dépendance), pour qu'elle parte vite sans perdre le texte."""
     dossier = Path(tempfile.mkdtemp(prefix="root-ecran-"))
     brute = dossier / "brute.png"
     subprocess.run(["screencapture", "-x", str(brute)], capture_output=True)
     if not brute.is_file():
         return brute
     reduite = dossier / "ecran.png"
-    subprocess.run(["ffmpeg", "-y", "-i", str(brute),
-                    "-vf", "scale='min(1680,iw)':-1", str(reduite)],
-                   capture_output=True)
+    try:
+        subprocess.run(["sips", "-Z", "1680", str(brute), "--out", str(reduite)],
+                       capture_output=True, timeout=20)
+    except (OSError, subprocess.SubprocessError):
+        return brute
     return reduite if reduite.is_file() else brute
 
 
