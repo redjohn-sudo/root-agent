@@ -426,8 +426,12 @@ def outil_capture_ecran() -> dict:
     """Outil appelé par Root : capture l'écran pour qu'elle le voie."""
     out = capturer_ecran()
     if not out.is_file():
-        return {"texte": "ERREUR : capture impossible (autorisation « Enregistrement "
-                "de l'écran » refusée au terminal ?)."}
+        return {"texte": "ERREUR : Root n'a pas l'autorisation « Enregistrement de "
+                "l'écran » sur ce Mac. N'insiste pas et n'essaie pas une commande "
+                "terminal : dis à l'utilisateur d'aller dans Réglages Système > "
+                "Confidentialité et sécurité > Enregistrement de l'écran, et d'y "
+                "cocher Root. Pour une PAGE WEB, utilise web_voir, qui renvoie déjà "
+                "une capture, sans cette autorisation."}
     return {"_image": out, "texte": "Écran capturé."}
 
 
@@ -649,10 +653,10 @@ OUTILS = {
     },
     "capture_ecran": {
         "fn": outil_capture_ecran, "risque": "sûr",
-        "schema": {"description": "Prendre une capture de l'écran de l'utilisateur pour "
-                   "voir ce qui est affiché (fenêtres, boutons, texte). C'est le SEUL "
-                   "moyen de voir l'écran : n'emploie jamais une commande terminal "
-                   "(screencapture, scrot, grim…) pour ça, utilise cet outil.",
+        "schema": {"description": "Capturer TOUT l'écran du Mac (les autres apps, le "
+                   "bureau). Pour une page web, utilise plutôt web_voir. N'emploie "
+                   "jamais une commande terminal (screencapture…) pour voir l'écran. "
+                   "Demande l'autorisation Enregistrement de l'écran sur le Mac.",
                    "parameters": {"type": "object", "properties": {}, "required": []}},
     },
     "web_naviguer": {
@@ -666,7 +670,8 @@ OUTILS = {
     "web_voir": {
         "fn": outil_web_voir, "risque": "sûr",
         "schema": {"description": "Regarder la page web actuelle : URL, titre, tout "
-                   "son texte et une capture. À utiliser pour voir où on en est.",
+                   "son texte ET une capture de la page. C'est l'outil pour prendre "
+                   "une photo/screenshot d'une page web (pas capture_ecran).",
                    "parameters": {"type": "object", "properties": {}, "required": []}},
     },
     "web_cliquer": {

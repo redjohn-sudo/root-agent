@@ -81,7 +81,17 @@ class Brave:
             for p in pages:
                 if p.get("id") == self._cible:
                     return p
-        return pages[0] if pages else self._http("/json")[0]
+        if pages:
+            return pages[0]
+        return self._ouvrir_target("about:blank")           # aucun onglet : on en crée un
+
+    def _ouvrir_target(self, url="about:blank"):
+        """Crée un onglet réel et renvoie sa cible CDP (PUT, repli GET)."""
+        chemin = "/json/new?" + urllib.parse.urlencode({"url": url})
+        try:
+            return self._http(chemin, methode="PUT")
+        except Exception:
+            return self._http(chemin)
 
     def _connecter_cible(self, target):
         """(Re)branche le pilotage sur un onglet précis et le retient comme actif."""
