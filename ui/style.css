@@ -599,3 +599,32 @@ input:checked + .mini-interr::after { transform: translateX(12px); background: v
 .op-bas .mem-retour { flex: 1; }
 #op-annuler { padding: 7px 12px; border-radius: 9px; font-size: 12.5px; color: var(--encre-2); background: rgba(255,255,255,.06); border: 1px solid var(--trait); }
 #op-ok { padding: 7px 13px; border-radius: 9px; font-size: 12.5px; font-weight: 600; color: #06120e; background: var(--vert); box-shadow: 0 0 14px var(--lueur); }
+
+/* ── Le vrai terminal (xterm) ────────────────────────────────────────────── */
+#terminal {
+  position: fixed; inset: 14px 18px 14px calc(var(--dock) + 18px); z-index: 15;
+  display: flex; flex-direction: column; border-radius: var(--rayon); overflow: hidden;
+  background: rgba(10, 16, 14, 0.82); border: 1px solid var(--trait);
+  -webkit-backdrop-filter: blur(30px) saturate(140%); backdrop-filter: blur(30px) saturate(140%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 24px 70px -24px rgba(0,0,0,.7);
+  animation: term-arrive .4s var(--ease-out);
+}
+#terminal[hidden] { display: none; }
+@keyframes term-arrive { from { opacity: 0; filter: blur(10px); transform: scale(.985); } }
+#terminal-tete {
+  display: flex; align-items: center; gap: 10px; padding: 9px 14px; flex: none;
+  border-bottom: 1px solid var(--trait); font-size: 12.5px; color: var(--encre-2);
+  background: rgba(0,0,0,.2);
+}
+.t-feu { width: 11px; height: 11px; border-radius: 50%; background: var(--vert-clair); box-shadow: 0 0 8px var(--lueur); flex: none; }
+#terminal-titre { font-weight: 600; color: var(--encre); }
+#terminal-shell { font: 11px var(--mono); color: var(--encre-3); }
+#terminal-tete button { margin-left: 0; width: 24px; height: 24px; border-radius: 7px; color: var(--encre-3); display: grid; place-items: center; transition: background .2s, color .2s; }
+#terminal-neuf { margin-left: auto; }
+#terminal-tete button:hover { background: rgba(255,255,255,.1); color: var(--encre); }
+#terminal-hote { flex: 1; min-height: 0; padding: 8px 10px 10px; overflow: hidden; }
+#terminal-hote .xterm { height: 100%; }
+#terminal-hote .xterm-viewport { background: transparent !important; scrollbar-width: thin; }
+#terminal-hote .xterm-viewport::-webkit-scrollbar { width: 8px; }
+#terminal-hote .xterm-viewport::-webkit-scrollbar-thumb { background: rgba(255,255,255,.14); border-radius: 8px; }
+body.terminal #fil, body.terminal #tete { opacity: .25; pointer-events: none; }

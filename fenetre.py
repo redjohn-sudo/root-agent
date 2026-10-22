@@ -31,6 +31,7 @@ import cerveaux        # les LLM interchangeables (cerveaux.json)
 import conversations   # toutes les conversations, de tous les LLM
 import memoire_edition # voir et retoucher la mémoire durable
 import outils_reglages # le panneau Outils (couper, restreindre, autonomie)
+import terminal_shell  # un vrai shell (PTY) dans la fenêtre, piloté par Vincent
 import root            # le moteur : boucle, outils, mémoire, sécurité
 
 ICI = Path(__file__).parent
@@ -128,6 +129,7 @@ class Pont:
         self.jour = root.tokens_charger()
         self.occupe = threading.Lock()
         self._accords: dict[int, dict] = {}
+        self._shell = None            # le vrai terminal (PTY), à la demande
         self._n = 0
         self.nouvelle()
         # premier balayage des conversations en fond (1 à 2 s la première fois)
@@ -232,6 +234,36 @@ class Pont:
         souvenirs = root.memoire.memoire_pour_prompt()
         if souvenirs.strip():
             self.messages.insert(1, {"role": "system", "content": ENTETE_MEMOIRE + "\n" + souvenirs})
+
+    # ── terminal (un vrai shell, c'est Vincent qui tape) ────────────────────
+    def terminal_demarrer(self, colonnes=80, lignes=24):
+        if self._shell and self._shell.vivant:
+            return True
+        def sortie(data):
+            self.emettre({"type": "term", "data": terminal_shell.encoder(data)})
+        def fin():
+            self.emettre({"type": "term_fin"})
+            self._shell = None
+        self._shell = terminal_shell.Shell(sortie, fin)
+        cwd = str(Path.home())
+        self._shell.demarrer(colonnes, lignes, cwd)
+        return True
+
+    def terminal_entree(self, data):
+        if self._shell:
+            self._shell.ecrire(terminal_shell.decoder(data))
+        return True
+
+    def terminal_taille(self, colonnes, lignes):
+        if self._shell:
+            self._shell.redimensionner(colonnes, lignes)
+        return True
+
+    def terminal_arreter(self):
+        if self._shell:
+            self._shell.arreter()
+            self._shell = None
+        return True
 
     # ── outils ──────────────────────────────────────────────────────────────
     def outils(self):

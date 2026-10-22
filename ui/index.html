@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
   <title>Root</title>
+  <link rel="stylesheet" href="vendor/xterm.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -157,6 +158,16 @@
 
     <main id="fil" aria-live="polite"><div id="fil-inner"></div></main>
 
+    <section id="terminal" hidden aria-label="Terminal">
+      <div id="terminal-tete">
+        <span class="t-feu"></span><span id="terminal-titre">Terminal</span>
+        <span id="terminal-shell"></span>
+        <button id="terminal-neuf" title="Relancer le shell">↻</button>
+        <button id="terminal-fermer" title="Fermer (⌘5 ou esc)">✕</button>
+      </div>
+      <div id="terminal-hote"></div>
+    </section>
+
     <form id="barre" class="verre" autocomplete="off">
       <textarea id="saisie" rows="1" placeholder="Parle à Root…"></textarea>
       <button id="envoyer" type="submit" aria-label="Envoyer">
@@ -174,6 +185,9 @@
   </div>
 
   <div id="toasts" aria-live="polite"></div>
+  <script src="vendor/xterm.js"></script>
+  <script src="vendor/xterm-addon-fit.js"></script>
+  <script src="vendor/xterm-addon-web-links.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

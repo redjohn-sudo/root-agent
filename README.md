@@ -30,8 +30,13 @@ Installation des dépendances : voir `INSTALL.md` (plus `pywebview` pour la fen�
 
 ## Le dock
 
-Une icône = un panneau. Faits : **Cerveaux** (⌘1), **Conversations** (⌘2), **Mémoire** (⌘3) et **Outils** (⌘4).
-À venir, un par un : Âme, Actions, Réglages, et Comparer.
+Une icône = un panneau. Faits : **Cerveaux** (⌘1), **Conversations** (⌘2), **Mémoire** (⌘3), **Outils**
+(⌘4) et **Terminal** (⌘5). À venir, un par un : Âme, Actions, Réglages, Comparer.
+
+**Terminal** (`terminal_shell.py` + `ui/vendor/xterm.js`) : un vrai shell (PTY)
+dans la fenêtre, où Vincent tape ses commandes, comme dans Ghostty. Rien à voir
+avec l'outil `terminal` du cerveau : ici le harness ne lit pas l'entrée et ne
+l'envoie nulle part, ça reste entre le PTY et l'affichage.
 
 **Outils** (`outils_reglages.py`) : les outils par famille (repliées par défaut,
 avec une recherche), chacun avec son risque. On coupe un outil (il n'est plus
@@ -58,7 +63,7 @@ par-dessus les règles de `memoire.py`) : ajouter, modifier, oublier, avec la ja
 du plafond et celle de la conversation en cours. Quand Root retient un fait seul,
 une notification propose d'annuler. `memoire.md` reste hors de GitHub.
 
-Raccourcis : ⌘1 cerveaux, ⌘2 conversations, ⌘3 mémoire, ⌘4 outils, ⌘K palette, ⌘N nouvelle conversation, ⌘⏎ / esc pour
+Raccourcis : ⌘1 cerveaux, ⌘2 conversations, ⌘3 mémoire, ⌘4 outils, ⌘5 terminal, ⌘K palette, ⌘N nouvelle conversation, ⌘⏎ / esc pour
 autoriser ou refuser une action de Root.
 
 ## Tests
@@ -67,4 +72,4 @@ autoriser ou refuser une action de Root.
 ~/.local/root-venv/bin/python -m unittest discover -p "test_*.py"
 ```
 
-474 tests au 22/10/2026, hors réseau.
+479 tests au 22/10/2026, hors réseau.

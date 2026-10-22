@@ -17,6 +17,7 @@ const ICONES = {
   crayon: '<path d="M14.5 5.5l4 4L9 19H5v-4z"/>',
   carnet: '<path d="M6.5 4.5h10A1.5 1.5 0 0 1 18 6v13.5H8a1.5 1.5 0 0 1-1.5-1.5zM6.5 18A1.5 1.5 0 0 1 8 16.5h10M10 8.5h4.5"/>',
   outils: '<path d="M10 6.5a3.5 3.5 0 0 0-4.8 4.3l-1.7 1.7 2 2 1.7-1.7A3.5 3.5 0 0 0 11.5 8M13.5 13l4.5 4.5a1.4 1.4 0 0 0 2-2L15.5 11"/>',
+  terminal: '<path d="M4.5 5.5h15a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1zM7 10l2.5 2L7 14M12.5 14.5h4"/>',
 };
 const svg = (nom, classe = "") => `<svg${classe ? ` class="${classe}"` : ""} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONES[nom]}</svg>`;
 const echap = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -182,6 +183,8 @@ window.rootEvent = function (ev) {
     case "cerveau": cerveauActif(ev.id, ev.nom); break;
     case "conversations": chargerConversations(); break;
     case "memoire": if (PANNEAU === "memoire") chargerMemoire(); break;
+    case "term": termEcrire(ev.data); break;
+    case "term_fin": termFin(); break;
     case "retenu":
       toast(`Root a retenu : ${ev.fait}`, true, { label: "Annuler", faire: async () => {
         await api().memoire_retirer(ev.fait); toast("Retiré de sa mémoire"); } });
@@ -197,6 +200,7 @@ const ICONES_DOCK = [
   { id: "conversations", label: "Conversations", icone: "bulle", kbd: "⌘2", ouvrir: () => basculer("conversations") },
   { id: "memoire", label: "Mémoire", icone: "carnet", kbd: "⌘3", ouvrir: () => basculer("memoire") },
   { id: "outils", label: "Outils", icone: "outils", kbd: "⌘4", ouvrir: () => basculer("outils") },
+  { id: "terminal", label: "Terminal", icone: "terminal", kbd: "⌘5", ouvrir: ouvrirTerminal },
 ];
 function survol(btn, label, kbd) {
   const r = btn.getBoundingClientRect(), d = $("#dock").getBoundingClientRect();
@@ -960,6 +964,7 @@ function entreesPalette(q) {
     { label: "Toutes les conversations", aide: "Par projet, de tous tes LLM", icone: "bulle", kbd: "⌘2", faire: () => ouvrirPanneau("conversations") },
     { label: "Mémoire", aide: "Ce que Root sait de toi", icone: "carnet", kbd: "⌘3", faire: () => ouvrirPanneau("memoire") },
     { label: "Outils", aide: "Ce que Root a le droit de faire", icone: "outils", kbd: "⌘4", faire: () => ouvrirPanneau("outils") },
+    { label: "Terminal", aide: "Un vrai shell, tu tapes dedans", icone: "terminal", kbd: "⌘5", faire: ouvrirTerminal },
     ...convs,
   ];
 }
@@ -997,13 +1002,83 @@ addEventListener("keydown", e => {
     if (!menu.hidden) { e.preventDefault(); fermerMenu(); return; }
     if (demandeOuverte) { e.preventDefault(); demandeOuverte.trancher(false); return; }
     if (PANNEAU) { e.preventDefault(); fermerPanneau(); return; }
+    if (TERM_OUVERT) { e.preventDefault(); fermerTerminal(); return; }
   }
   if (cmd && e.key === "1") { e.preventDefault(); frapper($("#ic-cerveaux")); basculer("cerveaux"); return; }
   if (cmd && e.key === "2") { e.preventDefault(); frapper($("#ic-conversations")); basculer("conversations"); return; }
   if (cmd && e.key === "3") { e.preventDefault(); frapper($("#ic-memoire")); basculer("memoire"); return; }
   if (cmd && e.key === "4") { e.preventDefault(); frapper($("#ic-outils")); basculer("outils"); return; }
+  if (cmd && e.key === "5") { e.preventDefault(); frapper($("#ic-terminal")); basculerTerminal(); return; }
   if (cmd && e.key.toLowerCase() === "n") { e.preventDefault(); nouvelleConversation(); }
 });
+
+// ── Le vrai terminal (xterm + shell PTY) ─────────────────────────────────────
+let TERM = null, FIT = null, TERM_OUVERT = false, termPret = false;
+const vueTerm = $("#terminal"), hoteTerm = $("#terminal-hote");
+
+function construireTerminal() {
+  TERM = new Terminal({
+    fontFamily: 'ui-monospace, "SF Mono", Menlo, monospace', fontSize: 13, lineHeight: 1.25,
+    cursorBlink: true, allowProposedApi: true, scrollback: 5000,
+    theme: {
+      background: "rgba(0,0,0,0)", foreground: "#e7efec", cursor: "#6fd4b6", cursorAccent: "#0b0f0e",
+      selectionBackground: "rgba(111,212,182,.3)",
+      black: "#0b0f0e", red: "#f0866a", green: "#6fd4b6", yellow: "#f0b35a", blue: "#7fb8e6",
+      magenta: "#a990f2", cyan: "#5fd6c6", white: "#cdd6d2",
+      brightBlack: "#5a6460", brightGreen: "#8ff0d2", brightYellow: "#ffcf8f", brightWhite: "#ffffff",
+    },
+  });
+  FIT = new FitAddon.FitAddon();
+  TERM.loadAddon(FIT);
+  try { TERM.loadAddon(new WebLinksAddon.WebLinksAddon()); } catch { /* lien web optionnel */ }
+  TERM.open(hoteTerm);
+  TERM.onData(d => api() && api().terminal_entree(btoa(unescape(encodeURIComponent(d)))));
+  TERM.onResize(({ cols, rows }) => api() && api().terminal_taille(cols, rows));
+  new ResizeObserver(() => { if (TERM_OUVERT) ajusterTerminal(); }).observe(hoteTerm);
+}
+function ajusterTerminal() {
+  try { FIT.fit(); } catch { /* pas encore mesurable */ }
+}
+function termEcrire(b64) {
+  if (!TERM) return;
+  const octets = atob(b64), tab = new Uint8Array(octets.length);
+  for (let i = 0; i < octets.length; i++) tab[i] = octets.charCodeAt(i);
+  TERM.write(tab);
+}
+function termFin() { if (TERM) TERM.write("\r\n\x1b[2m[shell terminé — ↻ pour relancer]\x1b[0m\r\n"); termPret = false; }
+
+async function ouvrirTerminal() {
+  if (PANNEAU) fermerPanneau(false);
+  if (!TERM) construireTerminal();
+  vueTerm.hidden = false; TERM_OUVERT = true;
+  document.body.classList.add("terminal");
+  $("#ic-terminal").classList.add("ouvert");
+  requestAnimationFrame(async () => {
+    ajusterTerminal();
+    if (!termPret && api()) {
+      termPret = true;
+      await api().terminal_demarrer(TERM.cols, TERM.rows);
+    }
+    TERM.focus();
+  });
+}
+function fermerTerminal() {
+  vueTerm.hidden = true; TERM_OUVERT = false;
+  document.body.classList.remove("terminal");
+  $("#ic-terminal").classList.remove("ouvert");
+  lueur.classList.remove("on");
+  saisie.focus();
+}
+const basculerTerminal = () => TERM_OUVERT ? fermerTerminal() : ouvrirTerminal();
+$("#terminal-fermer").onclick = fermerTerminal;
+$("#terminal-neuf").onclick = async () => {
+  if (!api()) return;
+  await api().terminal_arreter();
+  TERM.reset();
+  termPret = true;
+  await api().terminal_demarrer(TERM.cols, TERM.rows);
+  TERM.focus();
+};
 
 // ── Saisie ───────────────────────────────────────────────────────────────────
 const saisie = $("#saisie");
