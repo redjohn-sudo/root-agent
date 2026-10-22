@@ -66,6 +66,19 @@ une notification propose d'annuler. `memoire.md` reste hors de GitHub.
 Raccourcis : ⌘1 cerveaux, ⌘2 conversations, ⌘3 mémoire, ⌘4 outils, ⌘5 terminal, ⌘K palette, ⌘N nouvelle conversation, ⌘⏎ / esc pour
 autoriser ou refuser une action de Root.
 
+## En faire une app (Root.app)
+
+```sh
+python3 paquet/faire_icone.py paquet/icone.png   # l'icône (Pillow)
+bash paquet/faire_app.sh                          # monte paquet/Root.app
+```
+
+`Root.app` est une vraie app macOS : double-clic, icône, Dock, Applications.
+Son lanceur appelle le venv et le code en place (`~/.local/root-venv`,
+`~/Projets/root-harness`), donc tes mises à jour de code sont prises sans
+reconstruire. `Root.icns` est versionné ; refaire l'icône demande Pillow.
+Les logs de l'app vont dans `~/.local/root-app.log`.
+
 ## Tests
 
 ```sh

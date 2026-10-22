@@ -5,3 +5,8 @@ __pycache__/
 # Données personnelles de Root : jamais sur GitHub
 memoire.md
 memoire.md.*
+
+# Build de l'app (sorties, régénérées par paquet/faire_app.sh)
+paquet/Root.app/
+paquet/Root.iconset/
+paquet/icone.png
