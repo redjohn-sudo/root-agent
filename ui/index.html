@@ -62,6 +62,32 @@
   </aside>
   <div id="menu-ranger" class="verre" hidden></div>
 
+  <!-- Panneau « Mémoire » : ce que Root sait de Vincent, d'une conversation à l'autre -->
+  <aside id="panneau-memoire" class="panneau verre" aria-label="Mémoire" aria-hidden="true">
+    <div class="pan-tete">
+      <div>
+        <div class="pan-titre">Mémoire</div>
+        <div class="pan-sous">Ce que Root sait de toi, d'une conversation à l'autre.</div>
+      </div>
+      <button class="pan-fermer" data-fermer aria-label="Fermer">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="mem-corps">
+      <div class="jauges">
+        <div class="jauge" id="jauge-durable"><div class="j-ligne"><span>Mémoire durable</span><span class="j-val"></span></div><div class="j-barre"><i></i></div></div>
+        <div class="jauge" id="jauge-contexte"><div class="j-ligne"><span>Cette conversation</span><span class="j-val"></span></div><div class="j-barre"><i></i><b></b></div></div>
+        <div class="mem-note">Envoyée au cerveau à chaque message. Jamais de numéro, de clé ni d'identifiant.</div>
+      </div>
+      <form id="mem-ajout" class="mem-ajout" autocomplete="off">
+        <textarea id="mem-fait" rows="2" placeholder="Un fait sur toi, que tous tes cerveaux doivent savoir…"></textarea>
+        <div class="mem-cats" id="mem-cats"></div>
+        <div class="mem-bas"><span id="mem-retour" class="mem-retour"></span><button type="submit" id="mem-ajouter">Retenir<kbd>⏎</kbd></button></div>
+      </form>
+      <div id="mem-liste"></div>
+    </div>
+  </aside>
+
   <div id="app">
     <header id="tete" class="verre">
       <div id="sceau" aria-hidden="true"><canvas id="oreillette" width="64" height="64"></canvas></div>

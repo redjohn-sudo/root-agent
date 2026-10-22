@@ -451,3 +451,60 @@ kbd { font: 500 10.5px var(--mono); color: var(--encre-2); padding: 2px 6px; bor
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* ── Panneau « Mémoire » ─────────────────────────────────────────────────── */
+#panneau-memoire { width: min(390px, calc(100vw - var(--dock) - 40px)); }
+.mem-corps { flex: 1; overflow-y: auto; scrollbar-width: none; padding: 0 14px 18px; display: flex; flex-direction: column; gap: 12px; }
+.mem-corps::-webkit-scrollbar { display: none; }
+.jauges { display: flex; flex-direction: column; gap: 9px; padding: 12px; border-radius: 14px; background: rgba(255,255,255,.035); border: 1px solid var(--trait); }
+.j-ligne { display: flex; justify-content: space-between; gap: 10px; white-space: nowrap; font-size: 12px; color: var(--encre-2); margin-bottom: 5px; }
+.j-val { font: 11px var(--mono); color: var(--encre-3); }
+.j-barre { position: relative; height: 5px; border-radius: 99px; background: rgba(255,255,255,.07); overflow: hidden; }
+.j-barre i { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--vert), var(--vert-clair));
+             box-shadow: 0 0 10px var(--lueur); transition: width .9s var(--ease-out); }
+.j-barre b { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--ambre); opacity: .7; border-radius: 2px; }
+.jauge.haute .j-barre i { background: linear-gradient(90deg, var(--ambre), #f6cf8f); box-shadow: 0 0 10px rgba(240,179,90,.4); }
+.mem-note { font-size: 11px; color: var(--encre-3); line-height: 1.45; }
+.mem-ajout { display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 14px; background: rgba(0,0,0,.18); border: 1px solid var(--trait);
+             transition: border-color .25s var(--ease), box-shadow .25s var(--ease); }
+.mem-ajout:focus-within { border-color: rgba(111,212,182,.45); box-shadow: 0 0 0 3px rgba(111,212,182,.1); }
+#mem-fait { resize: none; border: 0; outline: 0; background: transparent; color: var(--encre); font: 13px/1.45 var(--police); }
+#mem-fait::placeholder { color: var(--encre-3); }
+.mem-cats { display: flex; gap: 5px; flex-wrap: wrap; }
+.mem-cats button { padding: 3px 9px; border-radius: 999px; font-size: 11.5px; color: var(--encre-2); background: rgba(255,255,255,.04); border: 1px solid var(--trait); transition: background .2s, color .2s, border-color .2s; }
+.mem-cats button:hover { background: rgba(255,255,255,.08); }
+.mem-cats button.on { color: var(--encre); border-color: rgba(111,212,182,.5); background: rgba(111,212,182,.13); }
+.mem-cats input { width: 110px; padding: 3px 9px; border-radius: 999px; font: 11.5px var(--police); color: var(--encre); background: rgba(0,0,0,.25); border: 1px dashed var(--trait-fort); outline: 0; }
+.mem-cats input:focus { border-style: solid; border-color: rgba(111,212,182,.5); }
+.mem-bas { display: flex; align-items: center; gap: 8px; }
+.mem-retour { flex: 1; font-size: 11.5px; color: var(--encre-3); line-height: 1.4; }
+.mem-retour.ko { color: var(--ambre); }
+.mem-retour button { color: var(--vert-clair); text-decoration: underline; text-underline-offset: 2px; font-size: 11.5px; }
+#mem-ajouter { display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border-radius: 10px; font-size: 12.5px; font-weight: 600;
+               background: var(--vert); color: #06120e; box-shadow: 0 0 14px var(--lueur); transition: transform .15s var(--ease), filter .2s; }
+#mem-ajouter kbd { color: #06120e; border-color: rgba(6,18,14,.3); background: rgba(255,255,255,.15); }
+#mem-ajouter:active { transform: scale(.95); }
+#mem-liste .grp { margin-top: 0; }
+.fait { position: relative; display: flex; align-items: flex-start; gap: 9px; padding: 8px 10px; border-radius: 12px; border: 1px solid transparent;
+        transition: background .2s var(--ease), border-color .3s var(--ease); animation: arrive .45s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 18ms); }
+.fait:hover { background: rgba(255,255,255,.05); }
+.fait.neuf { border-color: rgba(111,212,182,.5); background: rgba(111,212,182,.08); }
+.fait::before { content: ""; width: 5px; height: 5px; margin-top: 7px; flex: none; border-radius: 50%; background: var(--vert-clair); opacity: .7; }
+.fait-txt { flex: 1; min-width: 0; }
+.fait-texte { font-size: 13px; line-height: 1.5; color: var(--encre); outline: 0; border-radius: 5px; }
+.fait-texte[contenteditable="true"] { background: rgba(0,0,0,.3); box-shadow: 0 0 0 1px rgba(111,212,182,.5); padding: 1px 4px; margin: -1px -4px; }
+.fait-date { font-size: 10.5px; color: var(--encre-3); margin-top: 2px; }
+.fait .conv-gestes { padding-top: 1px; }
+.mem-vide { padding: 22px 10px; text-align: center; font-size: 12.5px; color: var(--encre-3); line-height: 1.5; }
+
+/* sous une réponse : les souvenirs liés à la demande */
+.lies { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; margin: -8px 0 0 6px; padding: 2px 9px; border-radius: 999px;
+        font-size: 11px; color: var(--encre-3); border: 1px solid var(--trait); background: rgba(0,0,0,.15); transition: color .2s, border-color .2s; }
+.lies:hover { color: var(--vert-clair); border-color: rgba(111,212,182,.4); }
+.lies svg { width: 12px; height: 12px; }
+
+/* un toast qui propose un geste (Annuler) */
+.toast.geste { pointer-events: auto; display: flex; align-items: center; gap: 12px; max-width: min(560px, calc(100vw - 120px)); }
+.toast.geste .t-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.toast.geste button { flex: none; font-size: 12.5px; color: var(--vert-clair); padding: 3px 9px; border-radius: 8px; background: rgba(111,212,182,.12); }
+.toast.geste button:hover { background: rgba(111,212,182,.22); }

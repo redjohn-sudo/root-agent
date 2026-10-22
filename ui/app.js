@@ -15,6 +15,7 @@ const ICONES = {
   croix: '<path d="M7 7l10 10M17 7 7 17"/>',
   chevron: '<path d="m7 10 5 5 5-5"/>',
   crayon: '<path d="M14.5 5.5l4 4L9 19H5v-4z"/>',
+  carnet: '<path d="M6.5 4.5h10A1.5 1.5 0 0 1 18 6v13.5H8a1.5 1.5 0 0 1-1.5-1.5zM6.5 18A1.5 1.5 0 0 1 8 16.5h10M10 8.5h4.5"/>',
 };
 const svg = (nom, classe = "") => `<svg${classe ? ` class="${classe}"` : ""} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONES[nom]}</svg>`;
 const echap = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -136,13 +137,26 @@ function fin(ev) {
   if (ev.tokens) txt += ` · ${ev.tokens >= 1000 ? fr(ev.tokens / 1000, 1) + "k" : ev.tokens} tokens`;
   if (ev.cout != null) txt += ` · ${fr(ev.cout * 100, ev.cout * 100 < 1 ? 2 : 1)} ct`;
   bloc("duree", `${txt} · ${heure}`);
+  if (ev.lies && ev.lies.length) {                 // souvenirs liés à la demande (rappel)
+    const n = ev.lies.length, el = bloc("lies", `${svg("carnet")}${n} souvenir${n > 1 ? "s" : ""} lié${n > 1 ? "s" : ""}`);
+    el.title = ev.lies.map(f => "• " + f).join("\n");
+    el.setAttribute("role", "button");
+    el.onclick = () => ouvrirPanneau("memoire");
+  }
 }
 
-function toast(texte, ok = true) {
+function toast(texte, ok = true, geste = null) {
   const t = document.createElement("div");
-  t.className = "toast verre" + (ok ? "" : " ko"); t.textContent = texte;
+  const partir = () => { if (t._parti) return; t._parti = true; t.classList.add("sort"); setTimeout(() => t.remove(), 450); };
+  t.className = "toast verre" + (ok ? "" : " ko") + (geste ? " geste" : "");
+  if (geste) {                                     // un toast qui propose un geste (Annuler…)
+    t.innerHTML = '<span class="t-txt"></span><button></button>';
+    t.querySelector(".t-txt").textContent = texte;
+    t.querySelector("button").textContent = geste.label;
+    t.querySelector("button").onclick = () => { geste.faire(); partir(); };
+  } else t.textContent = texte;
   $("#toasts").appendChild(t);
-  setTimeout(() => { t.classList.add("sort"); setTimeout(() => t.remove(), 450); }, 2600);
+  setTimeout(partir, geste ? 7000 : 2600);
 }
 
 function etat(valeur) {
@@ -166,6 +180,11 @@ window.rootEvent = function (ev) {
     case "toast": toast(ev.texte, ev.ok); break;
     case "cerveau": cerveauActif(ev.id, ev.nom); break;
     case "conversations": chargerConversations(); break;
+    case "memoire": if (PANNEAU === "memoire") chargerMemoire(); break;
+    case "retenu":
+      toast(`Root a retenu : ${ev.fait}`, true, { label: "Annuler", faire: async () => {
+        await api().memoire_retirer(ev.fait); toast("Retiré de sa mémoire"); } });
+      break;
   }
 };
 
@@ -175,6 +194,7 @@ const lueur = $("#dock-lueur"), bulle = $("#bulle");
 const ICONES_DOCK = [
   { id: "cerveaux", label: "Cerveaux", icone: "cerveau", kbd: "⌘1", ouvrir: () => basculer("cerveaux") },
   { id: "conversations", label: "Conversations", icone: "bulle", kbd: "⌘2", ouvrir: () => basculer("conversations") },
+  { id: "memoire", label: "Mémoire", icone: "carnet", kbd: "⌘3", ouvrir: () => basculer("memoire") },
 ];
 function survol(btn, label, kbd) {
   const r = btn.getBoundingClientRect(), d = $("#dock").getBoundingClientRect();
@@ -213,6 +233,7 @@ function construireDock() {
 const PANNEAUX = {
   cerveaux: { el: $("#panneau-cerveaux"), ouvrir: () => { rendreCerveaux(); sonderTout(); } },
   conversations: { el: $("#panneau-conv"), ouvrir: () => { rendreConversations(); chargerConversations(); setTimeout(() => cherche.focus(), 80); } },
+  memoire: { el: $("#panneau-memoire"), ouvrir: () => { rendreMemoire(); chargerMemoire(); setTimeout(() => champFait.focus(), 80); } },
 };
 let PANNEAU = null;
 function ouvrirPanneau(nom) {
@@ -557,6 +578,120 @@ cherche.addEventListener("keydown", e => {
   }
 });
 
+// ── Panneau « Mémoire » : ce que Root sait de toi ────────────────────────────
+const listeM = $("#mem-liste"), champFait = $("#mem-fait"), retourM = $("#mem-retour");
+let MEM = { categories: [], taille: 0, plafond: 8000, proposees: [] }, CAT = null, NEUF = null;
+
+async function chargerMemoire() {
+  if (!api()) return;
+  MEM = await api().memoire();
+  if (PANNEAU === "memoire") rendreMemoire();
+}
+const kilo = n => n >= 1000 ? fr(n / 1000, n < 10000 ? 1 : 0) + "k" : String(n);
+const dateCourte = iso => { const d = new Date(iso + "T12:00:00"); return isNaN(d) ? iso : d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" }); };
+function jauge(id, val, max, texte, repere) {
+  const j = $(id), part = Math.min(1, val / max);
+  j.querySelector(".j-val").textContent = texte;
+  j.querySelector("i").style.width = (part * 100).toFixed(1) + "%";
+  j.classList.toggle("haute", repere ? val > repere : part > .85);
+  const b = j.querySelector("b");
+  if (b) b.style.left = (repere / max * 100).toFixed(1) + "%";
+}
+function rendreMemoire() {
+  jauge("#jauge-durable", MEM.taille, MEM.plafond, `${fr(MEM.taille)} / ${fr(MEM.plafond)} caractères`);
+  const c = MEM.contexte || { tokens: 0, budget: 100000, seuil: 70000 };
+  jauge("#jauge-contexte", c.tokens, c.budget, `≈ ${kilo(c.tokens)} / ${kilo(c.budget)} tokens`, c.seuil);
+  $("#jauge-contexte").title = `Au-delà de ${kilo(c.seuil)} tokens (le repère ambre), Root résume le milieu de la conversation.`;
+  rendreCats();
+  if (!MEM.categories.length) {
+    listeM.innerHTML = '<div class="mem-vide">Root ne sait encore rien de toi.<br>Écris un premier fait au-dessus.</div>';
+    return;
+  }
+  let i = 0;
+  listeM.innerHTML = MEM.categories.map(cat => {
+    const cle = "m:" + cat.nom;
+    return `<section class="grp projet${plies.has(cle) ? " plie" : ""}" data-cle="${echap(cle)}" data-cat="${echap(cat.nom)}">
+      <button class="grp-tete">${svg("chevron", "chevron")}<span class="grp-nom">${echap(cat.nom)}</span><span class="grp-n">${cat.faits.length}</span></button>
+      <div class="grp-corps"><div>${cat.faits.map(f => `<div class="fait${f.texte === NEUF ? " neuf" : ""}" style="--i:${Math.min(i++, 30)}" data-texte="${echap(f.texte)}">
+        <div class="fait-txt"><div class="fait-texte">${echap(f.texte)}</div>${f.date ? `<div class="fait-date">noté le ${dateCourte(f.date)}</div>` : ""}</div>
+        <div class="conv-gestes"><button class="modifier" title="Modifier (double-clic)">${svg("crayon")}</button><button class="suppr" title="Oublier : Root ne pourra plus le réapprendre seul">${svg("croix")}</button></div>
+      </div>`).join("")}</div></div></section>`;
+  }).join("");
+  brancherMemoire();
+}
+function rendreCats() {
+  const noms = [...new Set([...MEM.categories.map(c => c.nom), ...MEM.proposees])];
+  if (!CAT) CAT = noms[0] || "Profil";
+  if (!noms.includes(CAT)) noms.push(CAT);
+  const zone = $("#mem-cats");
+  zone.innerHTML = noms.map(n => `<button type="button"${n === CAT ? ' class="on"' : ""} data-n="${echap(n)}">${echap(n)}</button>`).join("")
+    + '<input placeholder="+ catégorie" aria-label="Nouvelle catégorie">';
+  zone.querySelectorAll("button").forEach(b => { b.onclick = () => { CAT = b.dataset.n; rendreCats(); champFait.focus(); }; });
+  const entree = zone.querySelector("input");
+  entree.onkeydown = e => {
+    e.stopPropagation();
+    if (e.key === "Enter") { e.preventDefault(); const v = entree.value.trim(); if (v) { CAT = v; rendreCats(); champFait.focus(); } }
+    else if (e.key === "Escape") entree.blur();
+  };
+}
+function brancherMemoire() {
+  listeM.querySelectorAll(".grp").forEach(g => {
+    const tete = g.querySelector(".grp-tete");
+    tete.onclick = e => {
+      if (e.target.closest('[contenteditable="true"]')) return;
+      g.classList.toggle("plie");
+      g.classList.contains("plie") ? plies.add(g.dataset.cle) : plies.delete(g.dataset.cle);
+      memoriserPlies();
+    };
+    tete.ondblclick = e => {
+      e.preventDefault(); g.classList.remove("plie");
+      editer(tete.querySelector(".grp-nom"), async nom => {
+        if (await api().memoire_renommer_categorie(g.dataset.cat, nom)) { if (CAT === g.dataset.cat) CAT = nom; }
+        else toast("Cette catégorie existe déjà", false);
+        chargerMemoire();
+      });
+    };
+  });
+  listeM.querySelectorAll(".fait").forEach(el => {
+    const texte = el.dataset.texte, zone = el.querySelector(".fait-texte");
+    const modifier = () => editer(zone, async nouveau => {
+      const r = await api().memoire_modifier(texte, nouveau);
+      if (!r.ok) toast(r.message, false);
+      chargerMemoire();
+    });
+    el.querySelector(".modifier").onclick = modifier;
+    zone.ondblclick = modifier;
+    const s = el.querySelector(".suppr");
+    s.onclick = () => armer(s, "Oublier ?", async () => {
+      await api().memoire_oublier(texte);
+      toast("Oublié. Root ne le réapprendra pas seul.");
+    });
+  });
+}
+async function retenir(lever = false) {
+  const fait = champFait.value.trim();
+  if (!fait || !api()) return;
+  const r = await api().memoire_ajouter(CAT || "Profil", fait, lever);
+  retourM.className = "mem-retour" + (r.ok ? "" : " ko");
+  if (r.ok) {
+    NEUF = fait; champFait.value = ""; retourM.textContent = `Retenu dans « ${CAT} ».`;
+    await chargerMemoire();
+    setTimeout(() => { NEUF = null; }, 2500);
+  } else if (r.tombe) {
+    retourM.innerHTML = 'Tu lui avais fait oublier ce fait. <button type="button">Le remettre quand même</button>';
+    retourM.querySelector("button").onclick = () => retenir(true);
+  } else {
+    const doublon = r.message.match(/ressemble trop à « (.+?) » déjà noté/);
+    retourM.textContent = doublon ? `Déjà retenu presque mot pour mot : « ${doublon[1]} ». Modifie l'ancien plutôt.`
+                                  : r.message.replace(/^Refusé\s*:\s*/, "Refusé : ");
+  }
+}
+$("#mem-ajout").addEventListener("submit", e => { e.preventDefault(); retenir(); });
+champFait.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey && !e.metaKey) { e.preventDefault(); retenir(); }
+});
+champFait.addEventListener("input", () => { retourM.textContent = ""; retourM.className = "mem-retour"; });
+
 // ── Ouvrir une conversation : le fil change d'un coup ───────────────────────
 const PAR_PAGE = 120;
 function titreConv(t) { $("#titre-conv").textContent = t || ""; }
@@ -654,6 +789,7 @@ function entreesPalette(q) {
     ...CERVEAUX.map(c => ({ label: `Penser avec ${c.nom}`, aide: c.fournisseur + (c.id === ACTIF ? " · actif" : ""), icone: "cerveau", faire: () => ouvrirCerveaux(c.id) })),
     { label: "Nouvelle conversation", aide: "Repartir de zéro", icone: "plus", kbd: "⌘N", faire: nouvelleConversation },
     { label: "Toutes les conversations", aide: "Par projet, de tous tes LLM", icone: "bulle", kbd: "⌘2", faire: () => ouvrirPanneau("conversations") },
+    { label: "Mémoire", aide: "Ce que Root sait de toi", icone: "carnet", kbd: "⌘3", faire: () => ouvrirPanneau("memoire") },
     ...convs,
   ];
 }
@@ -694,6 +830,7 @@ addEventListener("keydown", e => {
   }
   if (cmd && e.key === "1") { e.preventDefault(); frapper($("#ic-cerveaux")); basculer("cerveaux"); return; }
   if (cmd && e.key === "2") { e.preventDefault(); frapper($("#ic-conversations")); basculer("conversations"); return; }
+  if (cmd && e.key === "3") { e.preventDefault(); frapper($("#ic-memoire")); basculer("memoire"); return; }
   if (cmd && e.key.toLowerCase() === "n") { e.preventDefault(); nouvelleConversation(); }
 });
 

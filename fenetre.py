@@ -29,6 +29,7 @@ import webview
 
 import cerveaux        # les LLM interchangeables (cerveaux.json)
 import conversations   # toutes les conversations, de tous les LLM
+import memoire_edition # voir et retoucher la mémoire durable
 import root            # le moteur : boucle, outils, mémoire, sécurité
 
 ICI = Path(__file__).parent
@@ -47,6 +48,7 @@ def ecrire_reglages(**valeurs) -> None:
     r = lire_reglages()
     r.update(valeurs)
     REGLAGES.write_text(json.dumps(r, ensure_ascii=False, indent=2), encoding="utf-8")
+ENTETE_MEMOIRE = "Mémoire durable de Root :"
 ATTENTE_MAX = 600      # secondes pour répondre à une demande d'autorisation
 CHEMINS_CMD = [Path.home() / "bin", Path.home() / ".local" / "bin", Path("/opt/homebrew/bin")]
 
@@ -68,6 +70,7 @@ class EcranFenetre:
 
     def __init__(self, pont: "Pont"):
         self.pont = pont
+        self.derniers_args = {}
 
     def appeler(self, messages, cle):
         self.pont.emettre({"type": "etat", "valeur": "reflechit"})
@@ -77,11 +80,18 @@ class EcranFenetre:
         return self.pont.attendre_accord(nom, args)
 
     def outil(self, nom, args, illisible=False):
+        self.derniers_args[nom] = args or {}
         detail = "arguments illisibles" if illisible else json.dumps(args or {}, ensure_ascii=False)
         self.pont.emettre({"type": "outil", "nom": nom, "args": detail[:300]})
 
     def resultat(self, nom, texte):
         self.pont.emettre({"type": "resultat", "nom": nom, "texte": texte})
+        if nom in ("memoire_noter", "memoire_oublier"):        # la mémoire a bougé : on le montre
+            self.pont.memoire_changee()
+            args = self.derniers_args.get(nom, {})
+            if nom == "memoire_noter" and texte.startswith("Noté"):
+                self.pont.emettre({"type": "retenu", "fait": args.get("fait", ""),
+                                   "categorie": args.get("categorie", "")})
 
     def image(self, chemin):
         miniature = self.pont.miniature(chemin)
@@ -94,9 +104,12 @@ class EcranFenetre:
     def fin(self, secondes, usage=None):
         usage = usage or {"entree": 0, "sortie": 0}
         c = self.pont.cerveau
+        demande = next((m.get("content") for m in reversed(self.pont.messages)
+                        if m.get("role") == "user" and isinstance(m.get("content"), str)), "")
         self.pont.emettre({"type": "fin", "secondes": secondes, "cerveau": c["nom"],
                            "tokens": usage["entree"] + usage["sortie"],
-                           "cout": cerveaux.cout(c, usage["entree"], usage["sortie"])})
+                           "cout": cerveaux.cout(c, usage["entree"], usage["sortie"]),
+                           "lies": memoire_edition.lies(demande, 3)})
 
     def arret(self, texte):
         self.pont.emettre({"type": "arret", "texte": texte})
@@ -206,11 +219,58 @@ class Pont:
         self.origine = ""                           # conversation d'un autre outil reprise ici
         self.lecture = None                         # conversation d'un autre outil affichée
         self.messages = [{"role": "system", "content": root.AME}]
+        self._memoire_dans_prompt()
+        return True
+
+    def _memoire_dans_prompt(self):
+        """Pose (ou remet à jour) la mémoire durable juste après l'âme."""
+        self.messages[:] = [m for m in self.messages
+                            if not (m.get("role") == "system"
+                                    and str(m.get("content", "")).startswith(ENTETE_MEMOIRE))]
         souvenirs = root.memoire.memoire_pour_prompt()
         if souvenirs.strip():
-            self.messages.append({"role": "system",
-                                  "content": "Mémoire durable de Root :\n" + souvenirs})
-        return True
+            self.messages.insert(1, {"role": "system", "content": ENTETE_MEMOIRE + "\n" + souvenirs})
+
+    # ── mémoire ─────────────────────────────────────────────────────────────
+    def memoire(self):
+        d = memoire_edition.lire()
+        d["contexte"] = {"tokens": root.memoire.estimer_tokens(self.messages),
+                         "budget": root.memoire.BUDGET_FENETRE, "seuil": root.SEUIL_TOKENS}
+        return d
+
+    def memoire_ajouter(self, categorie, fait, lever=False):
+        if lever:
+            memoire_edition.lever_tombe(fait)
+        r = memoire_edition.ajouter(categorie, fait)
+        if r["ok"]:
+            self.memoire_changee()
+        return r
+
+    def memoire_modifier(self, ancien, nouveau):
+        r = memoire_edition.modifier(ancien, nouveau)
+        if r["ok"]:
+            self.memoire_changee()
+        return r
+
+    def memoire_oublier(self, fait):
+        ok = memoire_edition.oublier(fait)
+        self.memoire_changee()
+        return ok
+
+    def memoire_retirer(self, fait):
+        """Le bouton Annuler : retiré sans tombe, Root pourra le réapprendre."""
+        ok = memoire_edition.retirer(fait)
+        self.memoire_changee()
+        return ok
+
+    def memoire_renommer_categorie(self, ancien, nouveau):
+        ok = memoire_edition.renommer_categorie(ancien, nouveau)
+        self.memoire_changee()
+        return ok
+
+    def memoire_changee(self):
+        self._memoire_dans_prompt()
+        self.emettre({"type": "memoire"})
 
     # ── conversations ───────────────────────────────────────────────────────
     def conversations(self):
@@ -238,6 +298,7 @@ class Pont:
             self.messages = brut.get("messages") or [{"role": "system", "content": root.AME}]
             if self.messages and self.messages[0].get("role") == "system":
                 self.messages[0]["content"] = root.AME          # l'âme à jour
+            self._memoire_dans_prompt()                         # et la mémoire du jour
             self.conv_id, self.origine, self.lecture = cle.split(":", 1)[1], brut.get("origine", ""), None
             c = cerveaux.par_id(brut.get("cerveau", ""))
             if c and c["id"] != self.cerveau["id"] and cerveaux.cle(c):

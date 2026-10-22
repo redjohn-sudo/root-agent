@@ -1,3 +1,7 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# Données personnelles de Root : jamais sur GitHub
+memoire.md
+memoire.md.*
