@@ -23,7 +23,7 @@ import root
 CHEMINS_CMD = [Path.home() / "bin", Path.home() / ".local" / "bin", Path("/opt/homebrew/bin"), Path("/usr/bin")]
 
 FAMILLES = [
-    ("Fichiers et terminal", ["lire_fichier", "lister", "ecrire_fichier", "terminal"]),
+    ("Fichiers et terminal", ["lire_fichier", "lister", "ecrire_fichier", "terminal", "executer_script"]),
     ("Navigateur", ["web_naviguer", "web_voir", "web_cliquer", "web_ecrire", "web_entree",
                     "web_defiler", "web_onglets", "web_nouvel_onglet", "web_basculer", "web_fermer_onglet"]),
     ("Écran du Mac", ["capture_ecran", "ecran_position", "ecran_cliquer", "ecran_double_cliquer",
@@ -42,6 +42,7 @@ RISQUES = {
     "modifie": ("Modifie", "change un fichier ou un état"),
     "systeme": ("Système", "clavier/souris ou micro du Mac"),
     "variable": ("Variable", "selon la commande"),
+    "sandbox": ("Bac à sable", "code isolé, avec timeout"),
 }
 
 PREREGLAGES = {

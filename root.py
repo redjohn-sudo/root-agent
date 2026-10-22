@@ -44,6 +44,7 @@ import verification    # registre de preuves (Codex), support d'autonomie
 import immunite        # Hide and Seek : erreur rencontrée une fois, retrouvée ailleurs (Codex)
 import entendre        # capture audio + transcription : le pendant de « voir l'écran »
 import consentement    # accord humain pour un acte irréversible, lié à l'empreinte exacte (Codex)
+import sandbox         # exécuter un script isolé avec timeout (le levier CTF)
 import cerveaux        # plusieurs LLM interchangeables derrière la même âme (fenêtre)
 import lecture         # garde d'entrée : lecture ancrée du contenu non fiable
 
@@ -425,6 +426,18 @@ def capturer_ecran() -> Path:
     return reduite if reduite.is_file() else brute
 
 
+def outil_executer_script(code: str, langage: str = "python", timeout: int = 30) -> str:
+    r = sandbox.executer(code, langage=langage, timeout=timeout)
+    if not r.get("ok") and r.get("erreur") and "sortie" not in r:
+        return "ERREUR : " + r["erreur"]
+    tete = ""
+    if r.get("timeout"):
+        tete = r["erreur"] + "\n"
+    elif not r.get("ok"):
+        tete = f"(code de retour {r.get('code_retour')})\n"
+    return tete + r.get("sortie", "")
+
+
 def outil_capture_ecran() -> dict:
     """Outil appelé par Root : capture l'écran pour qu'elle le voie."""
     out = capturer_ecran()
@@ -650,6 +663,19 @@ OUTILS = {
         "schema": {"description": "Exécuter une commande shell et renvoyer sa sortie.",
                    "parameters": {"type": "object", "properties": {
                        "commande": {"type": "string"}}, "required": ["commande"]}},
+    },
+    "executer_script": {
+        "fn": outil_executer_script, "risque": "sandbox",
+        "schema": {"description": "Écrire et exécuter un script (python, bash) dans un "
+                   "BAC À SABLE isolé, avec un timeout. Pour calculer, résoudre un "
+                   "challenge, ou lancer un outil (pwntools, RsaCtfTool, sympy…). "
+                   "L'écriture est limitée à un dossier jetable, le réseau est permis. "
+                   "Préfère cet outil au terminal pour du code sur plusieurs lignes et "
+                   "les essais répétés : il n'affecte pas le reste de la machine.",
+                   "parameters": {"type": "object", "properties": {
+                       "code": {"type": "string"},
+                       "langage": {"type": "string", "enum": ["python", "bash", "sh"]},
+                       "timeout": {"type": "integer"}}, "required": ["code"]}},
     },
     "ecrire_fichier": {
         "fn": outil_ecrire_fichier, "risque": "modifie",
@@ -929,6 +955,10 @@ def doit_demander(nom, args):
     if o["risque"] == "web":
         # Agir sur le web : en autonomie large, Root enchaîne seule (l'utilisateur ne
         # veut pas valider chaque clic) ; en prudente, on demande.
+        return AUTONOMIE != "large"
+    if o["risque"] == "sandbox":
+        # Script isolé (écriture confinée + timeout) : comme le web, on demande en
+        # prudente, on laisse faire en large pour permettre les essais répétés.
         return AUTONOMIE != "large"
     if o["risque"] == "modifie" or o["risque"] == "sortie":
         return True

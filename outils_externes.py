@@ -165,8 +165,8 @@ OUTILS = [
      "install": ["brew", "install", "exiftool"], "detect": ("which", "exiftool")},
     {"id": "steghide", "nom": "steghide", "role": "ctf",
      "source": "https://github.com/StefanoDeVuono/steghide",
-     "note": "Cacher/extraire des données dans une image ou un son (stéganographie).",
-     "install": ["brew", "install", "steghide"], "detect": ("which", "steghide")},
+     "note": "Cacher/extraire des données dans une image/son (stégano). À installer à la main (plus dans brew).",
+     "install": None, "detect": ("which", "steghide")},
     {"id": "john", "nom": "John the Ripper", "role": "ctf",
      "source": "https://github.com/openwall/john",
      "note": "Casser des hash de mots de passe (plus simple que hashcat pour démarrer).",
@@ -187,7 +187,10 @@ ROLES = {"attaque": "Attaque / éval", "defense": "Défense", "offensif": "Offen
 def _installe(o: dict) -> bool:
     genre, *reste = o["detect"]
     if genre == "which":
-        return shutil.which(reste[0]) is not None
+        import sys
+        if shutil.which(reste[0]):
+            return True
+        return (Path(sys.executable).parent / reste[0]).exists()   # CLI installée dans le venv
     if genre == "import":
         try:
             return importlib.util.find_spec(reste[0]) is not None

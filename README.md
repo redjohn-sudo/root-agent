@@ -29,6 +29,11 @@ Installation des dépendances : voir `INSTALL.md` (plus `pywebview` pour la fen�
   veut dans Root (34 : red team, défense, offensif, boîte à outils CTF crypto/pwn/reverse/stégano, briques, modèles locaux). Chacun
   avec sa source, son rôle, sa détection et sa commande d'installation. Le panneau
   Outils les montre avec leur état et un bouton « Installer » (pip / npm / brew).
+- `sandbox.py` + outil `executer_script` : Root écrit et lance son propre code
+  (python/bash) dans un bac à sable macOS (`sandbox-exec`) avec un timeout dur et
+  l'écriture confinée à un dossier jetable ; le réseau est permis (épreuves CTF).
+  C'est le levier pour résoudre un challenge : écrire un script, le lancer, itérer.
+  Les bibliothèques de Root (sympy, pwntools, pycryptodome…) y sont disponibles.
 - `pentest_journal.py` + panneau Pentest (⌘6) : lancer une campagne d'attaques
   contre un cerveau depuis la fenêtre, répéter N fois, et garder la trace durable
   (cible, attaques, méthode, résultats) dans `~/.local/root-pentest.db`. Onglets
@@ -113,4 +118,4 @@ Les logs de l'app vont dans `~/.local/root-app.log`.
 ~/.local/root-venv/bin/python -m unittest discover -p "test_*.py"
 ```
 
-524 tests au 22/10/2026, hors réseau.
+533 tests au 22/10/2026, hors réseau.
