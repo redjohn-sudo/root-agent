@@ -125,12 +125,63 @@ OUTILS = [
      "source": "https://github.com/greshake/llm-security",
      "note": "Démonstrations fondatrices de l'injection de prompt indirecte (référence).",
      "install": None, "detect": ("manuel",)},
+    # ── Boîte à outils CTF (crypto, pwn, reverse, stégano) ──────────────────
+    {"id": "pycryptodome", "nom": "PyCryptodome", "role": "ctf",
+     "source": "https://github.com/Legrandin/pycryptodome",
+     "note": "Primitives crypto en Python (RSA, AES, hash…) pour écrire des attaques.",
+     "install": PIP + ["install", "pycryptodome"], "detect": ("import", "Crypto")},
+    {"id": "gmpy2", "nom": "gmpy2", "role": "ctf",
+     "source": "https://github.com/aleaxit/gmpy",
+     "note": "Grands entiers et arithmétique rapide (factorisation, RSA).",
+     "install": PIP + ["install", "gmpy2"], "detect": ("import", "gmpy2")},
+    {"id": "sympy", "nom": "SymPy", "role": "ctf",
+     "source": "https://github.com/sympy/sympy",
+     "note": "Maths symboliques et théorie des nombres (modulaire, équations).",
+     "install": PIP + ["install", "sympy"], "detect": ("import", "sympy")},
+    {"id": "z3solver", "nom": "z3-solver", "role": "ctf",
+     "source": "https://github.com/Z3Prover/z3",
+     "note": "Solveur de contraintes (SMT) : logique, certains crypto, reverse.",
+     "install": PIP + ["install", "z3-solver"], "detect": ("import", "z3")},
+    {"id": "pwntools", "nom": "pwntools", "role": "ctf",
+     "source": "https://github.com/Gallopsled/pwntools",
+     "note": "La boîte à outils d'exploitation : dialoguer avec une épreuve distante, forger des payloads.",
+     "install": PIP + ["install", "pwntools"], "detect": ("import", "pwn")},
+    {"id": "rsactftool", "nom": "RsaCtfTool", "role": "ctf",
+     "source": "https://github.com/RsaCtfTool/RsaCtfTool",
+     "note": "Lance automatiquement les attaques RSA connues (Wiener, factorisation, clés faibles…).",
+     "install": PIP + ["install", "git+https://github.com/RsaCtfTool/RsaCtfTool.git"],
+     "detect": ("which", "RsaCtfTool")},
+    {"id": "radare2", "nom": "radare2", "role": "ctf",
+     "source": "https://github.com/radareorg/radare2",
+     "note": "Reverse engineering : désassembler et analyser un binaire.",
+     "install": ["brew", "install", "radare2"], "detect": ("which", "r2")},
+    {"id": "binwalk", "nom": "binwalk", "role": "ctf",
+     "source": "https://github.com/ReFirmLabs/binwalk",
+     "note": "Fouiller un fichier : fichiers cachés, firmwares, extraction.",
+     "install": ["brew", "install", "binwalk"], "detect": ("which", "binwalk")},
+    {"id": "exiftool", "nom": "ExifTool", "role": "ctf",
+     "source": "https://github.com/exiftool/exiftool",
+     "note": "Lire les métadonnées (images, docs) : souvent un flag en stégano/forensic.",
+     "install": ["brew", "install", "exiftool"], "detect": ("which", "exiftool")},
+    {"id": "steghide", "nom": "steghide", "role": "ctf",
+     "source": "https://github.com/StefanoDeVuono/steghide",
+     "note": "Cacher/extraire des données dans une image ou un son (stéganographie).",
+     "install": ["brew", "install", "steghide"], "detect": ("which", "steghide")},
+    {"id": "john", "nom": "John the Ripper", "role": "ctf",
+     "source": "https://github.com/openwall/john",
+     "note": "Casser des hash de mots de passe (plus simple que hashcat pour démarrer).",
+     "install": ["brew", "install", "john-jumbo"], "detect": ("which", "john")},
+    {"id": "sagemath", "nom": "SageMath", "role": "ctf",
+     "source": "https://github.com/sagemath/sage",
+     "note": "Le gros calcul mathématique (attaques RSA, réseaux/LLL, courbes). Lourd, à installer à part.",
+     "install": None, "detect": ("which", "sage")},
 ]
 
 PAR_ID = {o["id"]: o for o in OUTILS}
 
 ROLES = {"attaque": "Attaque / éval", "defense": "Défense", "offensif": "Offensif",
-         "brique": "Briques", "modele": "Modèles locaux", "reference": "Référence"}
+         "ctf": "Boîte à outils CTF", "brique": "Briques", "modele": "Modèles locaux",
+         "reference": "Référence"}
 
 
 def _installe(o: dict) -> bool:
@@ -158,7 +209,7 @@ def etat() -> dict:
             "installable": o["install"] is not None,
             "commande": " ".join(o["install"]) if o["install"] else "",
         })
-    ordre = ["attaque", "defense", "offensif", "modele", "brique", "reference"]
+    ordre = ["attaque", "defense", "offensif", "ctf", "modele", "brique", "reference"]
     return {"total": len(OUTILS),
             "installes": sum(1 for o in OUTILS if _installe(o)),
             "groupes": [{"role": r, "titre": ROLES[r], "outils": groupes[r]}

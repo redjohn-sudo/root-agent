@@ -8,10 +8,10 @@ import outils_externes as ext
 
 
 class TestRegistre(unittest.TestCase):
-    def test_les_22_sont_la_et_bien_formes(self):
-        self.assertEqual(len(ext.OUTILS), 22)
+    def test_tous_presents_et_bien_formes(self):
+        self.assertEqual(len(ext.OUTILS), 34)
         ids = [o["id"] for o in ext.OUTILS]
-        self.assertEqual(len(set(ids)), 22)                 # pas de doublon
+        self.assertEqual(len(set(ids)), 34)                 # pas de doublon
         for o in ext.OUTILS:
             self.assertIn(o["role"], ext.ROLES)
             self.assertTrue(o["source"].startswith("https://github.com/"))
@@ -19,10 +19,10 @@ class TestRegistre(unittest.TestCase):
 
     def test_etat_groupe_et_compte(self):
         d = ext.etat()
-        self.assertEqual(d["total"], 22)
+        self.assertEqual(d["total"], 34)
         total_dans_groupes = sum(len(g["outils"]) for g in d["groupes"])
-        self.assertEqual(total_dans_groupes, 22)
-        self.assertLessEqual(d["installes"], 22)
+        self.assertEqual(total_dans_groupes, 34)
+        self.assertLessEqual(d["installes"], 34)
 
     def test_detection_import_et_which(self):
         self.assertTrue(ext._installe({"detect": ("import", "json")}))     # stdlib présent
