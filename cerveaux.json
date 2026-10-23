@@ -1,5 +1,5 @@
 {
-  "defaut": "claude-sonnet",
+  "defaut": "glm-flash",
   "_aide": "Chaque cerveau : url compatible OpenAI, modèle, NOM de la variable qui contient la clé (jamais la clé elle-même), prix en $ par million de tokens [entrée, sortie] ou null si non confirmé. outils/vision mesurés le 21/10/2026. effort = reasoning_effort pour les modèles à raisonnement.",
   "cerveaux": [
     {"id": "deepseek-flash", "nom": "DeepSeek V4.1 Flash", "fournisseur": "DeepSeek",
