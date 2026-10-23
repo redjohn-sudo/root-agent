@@ -1099,13 +1099,24 @@ def _vers_anthropic(messages):
     return "\n\n".join(systeme), out
 
 
-def appeler_modele_claude(messages, cle):
-    """Appelle l'API Anthropic et renvoie une réponse au format OpenAI, pour que
-    la boucle, le compteur de tokens et le reste du harness restent inchangés."""
+def appeler_modele_claude(messages, cle, modele=None):
+    """Appelle l'API Anthropic (natif /v1/messages) AVEC prompt caching, et rend
+    une réponse au format OpenAI. Le cache couvre les outils + l'âme (préfixe fixe
+    ~5800 tokens) et la queue de l'historique (breakpoint glissant). Sur Sonnet/
+    Opus 5.5, relire ce préfixe coûte ~0,05x le prix d'entrée : ~95 % d'économie."""
     systeme, msgs = _vers_anthropic(messages)
+    outils = _outils_anthropic()
+    if outils:                                      # BP1 : cache du bloc outils
+        outils[-1] = {**outils[-1], "cache_control": {"type": "ephemeral"}}
+    sys_blocs = ([{"type": "text", "text": systeme,
+                   "cache_control": {"type": "ephemeral"}}]    # BP2 : outils + âme
+                 if systeme else [])
+    if msgs and isinstance(msgs[-1].get("content"), list) and msgs[-1]["content"]:
+        msgs[-1]["content"][-1] = {**msgs[-1]["content"][-1],   # BP3 : queue glissante
+                                   "cache_control": {"type": "ephemeral"}}
     corps = json.dumps({
-        "model": MODELE_CLAUDE, "max_tokens": 16000,
-        "system": systeme, "messages": msgs, "tools": _outils_anthropic(),
+        "model": modele or MODELE_CLAUDE, "max_tokens": 16000,
+        "system": sys_blocs, "messages": msgs, "tools": outils,
     }).encode()
     req = urllib.request.Request(URL_CLAUDE, data=corps, headers={
         "content-type": "application/json", "x-api-key": cle,
@@ -1126,7 +1137,9 @@ def appeler_modele_claude(messages, cle):
     u = d.get("usage", {})
     return {"choices": [{"message": msg}],
             "usage": {"prompt_tokens": u.get("input_tokens", 0),
-                      "completion_tokens": u.get("output_tokens", 0)}}
+                      "completion_tokens": u.get("output_tokens", 0),
+                      "cache_read": u.get("cache_read_input_tokens", 0),
+                      "cache_creation": u.get("cache_creation_input_tokens", 0)}}
 
 
 # Le cerveau choisi dans la fenêtre (un dict de cerveaux.json). None = le chemin
@@ -1136,6 +1149,9 @@ CERVEAU_COURANT = None
 
 def appeler_modele(messages, cle):
     if CERVEAU_COURANT is not None:
+        if CERVEAU_COURANT.get("fournisseur") == "Anthropic":   # natif /v1/messages + cache
+            return appeler_modele_claude(messages, cerveaux.cle(CERVEAU_COURANT),
+                                         modele=CERVEAU_COURANT["modele"])
         return cerveaux.appeler(CERVEAU_COURANT, messages, schema_pour_deepseek())
     if CERVEAU == "claude":
         return appeler_modele_claude(messages, cle)
