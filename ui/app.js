@@ -1435,3 +1435,13 @@ window.addEventListener("pywebviewready", async () => {
   chargerConversations();
 });
 saisie.focus();
+
+// Cmd/Ctrl+R : recharge l'interface (re-lit cerveaux, mémoire) sans fermer la
+// fenêtre. Ne recharge PAS le moteur Python : pour un changement de code, il
+// faut relancer le process. Capture pour qu'aucun champ ne l'intercepte.
+document.addEventListener("keydown", e => {
+  if ((e.metaKey || e.ctrlKey) && (e.key === "r" || e.key === "R")) {
+    e.preventDefault();
+    location.reload();
+  }
+}, true);
