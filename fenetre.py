@@ -55,6 +55,45 @@ def ecrire_reglages(**valeurs) -> None:
     r.update(valeurs)
     REGLAGES.write_text(json.dumps(r, ensure_ascii=False, indent=2), encoding="utf-8")
 ENTETE_MEMOIRE = "Mémoire durable de Root :"
+
+# Quand le cerveau est Anthropic, son filtre de sécurité refuse le contexte red
+# team (observé le 23/10, refus reproductible même sur « salut »). On retire
+# alors les sections dédiées cyber EN ENTIER, puis les puces sensibles
+# éparpillées ailleurs. Les autres cerveaux (DeepSeek, Nebius, local) reçoivent
+# la mémoire complète. Mesuré : sans ce filtre, refusal ; avec, end_turn.
+SECTIONS_HORS_CLAUDE = ("cybersécurité", "cybersecurite", "certifs")
+MOTS_HORS_CLAUDE = ("red team", "pentest", "offensif", "offensive", "exploit",
+                    "faille", "vulnér", "vulner", "attaq", "garak", "ctf",
+                    "bug bounty", "cyber", "hack", "immunit", "root-me",
+                    "audit", "semgrep", "chiffr", "crypt", "scanner")
+
+
+def _plier(s: str) -> str:
+    import unicodedata
+    return "".join(c for c in unicodedata.normalize("NFKD", s.lower())
+                   if not unicodedata.combining(c))
+
+
+def memoire_pour_cerveau(souvenirs: str, cerveau: dict | None) -> str:
+    """Retire de la mémoire le contexte red team quand le cerveau est Claude :
+    sections dédiées entières, puis puces sensibles ailleurs. Les titres de
+    section restent comme repères. Les autres cerveaux reçoivent tout."""
+    if not cerveau or cerveau.get("fournisseur") != "Anthropic":
+        return souvenirs
+    mots = [_plier(m) for m in MOTS_HORS_CLAUDE]
+    out, saute = [], False
+    for ligne in souvenirs.splitlines():
+        if ligne.startswith("## "):
+            saute = any(ligne[3:].strip().lower().startswith(p) for p in SECTIONS_HORS_CLAUDE)
+            out.append(ligne)
+            continue
+        if saute:
+            continue
+        if ligne.strip() and not ligne.startswith("#") and any(m in _plier(ligne) for m in mots):
+            continue
+        out.append(ligne)
+    return "\n".join(out)
+
 VERSION = "1.0"
 PANNEAUX_DOCK = [("cerveaux","Cerveaux"),("conversations","Conversations"),("memoire","Mémoire"),("outils","Outils"),("terminal","Terminal"),("pentest","Pentest"),("ame","Âme"),("proxy","Proxy")]
 ATTENTE_MAX = 600      # secondes pour répondre à une demande d'autorisation
@@ -184,6 +223,8 @@ class Pont:
         ecrire_reglages(cerveau=c["id"])
         if repartir:
             self.nouvelle()
+        else:
+            self._memoire_dans_prompt()   # re-filtre la mémoire selon le nouveau cerveau
         self.emettre({"type": "cerveau", "id": c["id"], "nom": c["nom"]})
         self.emettre({"type": "toast", "ok": True,
                       "texte": f"Root pense avec {c['nom']}" + (" · nouvelle conversation" if repartir else "")})
@@ -237,7 +278,7 @@ class Pont:
         self.messages[:] = [m for m in self.messages
                             if not (m.get("role") == "system"
                                     and str(m.get("content", "")).startswith(ENTETE_MEMOIRE))]
-        souvenirs = root.memoire.memoire_pour_prompt()
+        souvenirs = memoire_pour_cerveau(root.memoire.memoire_pour_prompt(), self.cerveau)
         if souvenirs.strip():
             self.messages.insert(1, {"role": "system", "content": ENTETE_MEMOIRE + "\n" + souvenirs})
 
