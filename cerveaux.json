@@ -1,5 +1,5 @@
 {
-  "defaut": "deepseek-flash",
+  "defaut": "claude-sonnet",
   "_aide": "Chaque cerveau : url compatible OpenAI, modèle, NOM de la variable qui contient la clé (jamais la clé elle-même), prix en $ par million de tokens [entrée, sortie] ou null si non confirmé. outils/vision mesurés le 21/10/2026. effort = reasoning_effort pour les modèles à raisonnement.",
   "cerveaux": [
     {"id": "deepseek-flash", "nom": "DeepSeek V4.1 Flash", "fournisseur": "DeepSeek",
@@ -29,6 +29,14 @@
     {"id": "gpt-oss", "nom": "gpt-oss 120B", "fournisseur": "Nebius",
      "url": "https://api.studio.nebius.com/v1", "modele": "openai/gpt-oss-120b", "cle": "NEBIUS_API_KEY",
      "prix": [0.15, 0.60], "outils": true, "vision": false, "raisonnement": true, "effort": "low", "max_tokens": 4000,
-     "note": "Le plus rapide mesuré. Ne voit pas les images."}
+     "note": "Le plus rapide mesuré. Ne voit pas les images."},
+    {"id": "claude-sonnet", "nom": "Claude Sonnet 5.5", "fournisseur": "Anthropic",
+     "url": "https://api.anthropic.com/v1", "modele": "claude-sonnet-5-5", "cle": "ANTHROPIC_API_KEY",
+     "prix": null, "outils": true, "vision": true, "raisonnement": true, "max_tokens": 16000,
+     "note": "Claude via l'API (crédits Console 100 $). Excellent, bon rapport puissance/coût."},
+    {"id": "claude-opus", "nom": "Claude Opus 5.5", "fournisseur": "Anthropic",
+     "url": "https://api.anthropic.com/v1", "modele": "claude-opus-5-5", "cle": "ANTHROPIC_API_KEY",
+     "prix": null, "outils": true, "vision": true, "raisonnement": true, "max_tokens": 16000,
+     "note": "Le plus puissant. Cher : a reserver aux gros coups."}
   ]
 }

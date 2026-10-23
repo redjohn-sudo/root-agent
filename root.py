@@ -68,10 +68,10 @@ AME = (ICI / "ame.md").read_text(encoding="utf-8")
 # Cerveau de Root. Deux backends possibles :
 #   "claude"   : API Anthropic (crédits de l'utilisateur), modèle fort, via un adaptateur.
 #   "deepseek" : API compatible OpenAI, en direct.
-CERVEAU = "deepseek"
+CERVEAU = "claude"
 BASE_URL = "https://api.deepseek.com"
 MODELE = "deepseek-flash"          # DeepSeek V4.1 Flash (id confirmé via /models)
-MODELE_CLAUDE = "claude-sonnet-5-5"   # cerveau Claude (bon rapport puissance/coût)
+MODELE_CLAUDE = "claude-sonnet-5-5"   # Sonnet : excellent et ~5x moins cher qu'Opus (budget 100 $)
 URL_CLAUDE = "https://api.anthropic.com/v1/messages"
 MODELE_ACTIF = MODELE_CLAUDE if CERVEAU == "claude" else MODELE
 
@@ -1104,7 +1104,7 @@ def appeler_modele_claude(messages, cle):
     la boucle, le compteur de tokens et le reste du harness restent inchangés."""
     systeme, msgs = _vers_anthropic(messages)
     corps = json.dumps({
-        "model": MODELE_CLAUDE, "max_tokens": 4000,
+        "model": MODELE_CLAUDE, "max_tokens": 16000,
         "system": systeme, "messages": msgs, "tools": _outils_anthropic(),
     }).encode()
     req = urllib.request.Request(URL_CLAUDE, data=corps, headers={
