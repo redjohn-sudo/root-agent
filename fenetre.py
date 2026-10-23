@@ -723,7 +723,8 @@ class Pont:
                 import anyio, pont_root
                 self.emettre({"type": "etat", "valeur": "reflechit"})
                 rep = anyio.run(lambda: pont_root.demander_ui(
-                    texte, EcranFenetre(self), self.cerveau.get("modele", "sonnet")))
+                    texte, EcranFenetre(self), self.cerveau.get("modele", "sonnet"),
+                    effort=self.cerveau.get("effort")))
                 if rep:
                     self.messages.append({"role": "assistant", "content": rep})
                 return

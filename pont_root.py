@@ -54,25 +54,28 @@ async def _permission(nom, entree, ctx):
     return PermissionResultAllow()
 
 
-def options(modele: str = "sonnet", systeme: str | None = None) -> ClaudeAgentOptions:
+def options(modele: str = "sonnet", systeme: str | None = None,
+            effort: str | None = None) -> ClaudeAgentOptions:
     serveur = create_sdk_mcp_server("root", tools=outils_sdk())
     return ClaudeAgentOptions(
         tools=[],                               # couper les outils natifs de Claude Code
         mcp_servers={"root": serveur},
         system_prompt=systeme if systeme is not None else root.AME,
         model=modele,
+        effort=effort,                          # low|medium|high|xhigh|max, ou None = défaut
         max_turns=12,
         strict_mcp_config=True,
         can_use_tool=_permission,               # consulté car pas d'allowed_tools large
     )
 
 
-async def demander_ui(texte: str, ecran, modele: str = "sonnet", systeme: str | None = None):
+async def demander_ui(texte: str, ecran, modele: str = "sonnet", systeme: str | None = None,
+                      effort: str | None = None):
     """Un tour piloté par Claude (Max), émis vers l'écran de la fenêtre.
     `ecran` expose outil(nom,args), reponse(texte), fin(secondes, usage)."""
     t0 = time.time()
     final = ""
-    async for msg in query(prompt=texte, options=options(modele, systeme)):
+    async for msg in query(prompt=texte, options=options(modele, systeme, effort)):
         if isinstance(msg, AssistantMessage):
             for b in msg.content:
                 if isinstance(b, ToolUseBlock):
