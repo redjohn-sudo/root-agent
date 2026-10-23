@@ -673,6 +673,17 @@ def outil_ecran_touche(nom: str = "return") -> str:
 # La table des outils : la fonction + son schéma (ce que le modèle voit) + le
 # niveau de risque (pour la permission). "sûr" = lecture seule, "modifie" =
 # touche au disque, "sortie" = agit vers l'extérieur.
+def outil_second_avis(question: str, tache: str = "") -> str:
+    """Délègue un sous-problème NEUTRE à Claude Opus (abonnement Max) et renvoie
+    sa réponse. Import paresseux pour éviter un cycle avec pont_root."""
+    import anyio
+    import pont_root
+    try:
+        return anyio.run(lambda: pont_root.avis(question))
+    except Exception as e:
+        return f"ERREUR second_avis : {e}"
+
+
 OUTILS = {
     "lire_fichier": {
         "fn": outil_lire_fichier, "risque": "sûr",
@@ -695,6 +706,18 @@ OUTILS = {
         "schema": {"description": "Lister le contenu d'un dossier.",
                    "parameters": {"type": "object", "properties": {
                        "chemin": {"type": "string"}}, "required": []}},
+    },
+    "second_avis": {
+        "fn": outil_second_avis, "risque": "sûr",
+        "schema": {"description": "Déléguer un sous-problème NEUTRE (maths, logique, "
+                   "algorithme, explication, debug de code générique) à Claude Opus, un "
+                   "modèle plus puissant, et recevoir sa réponse. Opus REFUSE tout "
+                   "contenu offensif (reverse, cracking, exploitation) : n'envoie que des "
+                   "questions autonomes et neutres, sans contexte d'attaque. `tache` = "
+                   "libellé court affiché pendant qu'il réfléchit.",
+                   "parameters": {"type": "object", "properties": {
+                       "question": {"type": "string"},
+                       "tache": {"type": "string"}}, "required": ["question"]}},
     },
     "terminal": {
         "fn": outil_terminal, "risque": "variable",

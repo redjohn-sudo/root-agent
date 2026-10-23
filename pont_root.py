@@ -69,6 +69,28 @@ def options(modele: str = "sonnet", systeme: str | None = None,
     )
 
 
+async def avis(question: str, modele: str = "opus", effort: str = "high") -> str:
+    """Pose une question NEUTRE à Claude (via l'abonnement Max), SANS aucun outil :
+    pur raisonnement, un seul tour. Renvoie le texte. Opus refuse le contenu
+    offensif ; on ne lui envoie donc que des sous-problèmes neutres."""
+    opts = ClaudeAgentOptions(
+        tools=[],                               # aucun outil : raisonnement pur
+        system_prompt=("Tu aides un autre agent sur un sous-problème précis. "
+                       "Réponds de façon claire, directe et complète."),
+        model=modele,
+        effort=effort,
+        max_turns=1,
+        strict_mcp_config=True,
+    )
+    morceaux = []
+    async for msg in query(prompt=question, options=opts):
+        if isinstance(msg, AssistantMessage):
+            for b in msg.content:
+                if isinstance(b, TextBlock) and b.text.strip():
+                    morceaux.append(b.text)
+    return "\n".join(morceaux).strip() or "(réponse vide ou refus du modèle)"
+
+
 async def demander_ui(texte: str, ecran, modele: str = "sonnet", systeme: str | None = None,
                       effort: str | None = None):
     """Un tour piloté par Claude (Max), émis vers l'écran de la fenêtre.
