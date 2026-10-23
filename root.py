@@ -1131,6 +1131,10 @@ def appeler_modele_claude(messages, cle, modele=None):
             tool_calls.append({"id": bloc["id"], "type": "function",
                 "function": {"name": bloc["name"],
                              "arguments": json.dumps(bloc.get("input", {}), ensure_ascii=False)}})
+    if not texte and not tool_calls:        # refus/vide : garder l'historique valide
+        texte = ("[Claude a refusé ce contexte (filtre de sécurité Anthropic, "
+                 "stop_reason=refusal). Bascule sur DeepSeek ou GLM pour ce travail.]"
+                 if d.get("stop_reason") == "refusal" else "[réponse vide du modèle]")
     msg = {"role": "assistant", "content": texte or None}
     if tool_calls:
         msg["tool_calls"] = tool_calls
