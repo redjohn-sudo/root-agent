@@ -177,6 +177,24 @@ body.reflechit #pastille { animation-duration: .7s; }
   opacity: 0; animation: arrive .9s var(--ease-out) .45s forwards;
 }
 #barre:focus-within { border-color: rgba(111,212,182,.5); box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 20px 60px -20px rgba(0,0,0,.6), 0 0 0 4px rgba(111,212,182,.14); }
+
+/* Délégation à un autre modèle : pastille au-dessus de la barre. */
+#delegations { width: 100%; max-width: var(--largeur-fil); margin: 0 auto 2px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; }
+#delegations:empty { display: none; }
+.delegation { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px;
+  border-radius: 14px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  font: 400 12px var(--police); color: var(--encre);
+  opacity: 0; transform: translateY(6px); transition: opacity .25s var(--ease-out), transform .25s var(--ease-out); }
+.delegation.on { opacity: 1; transform: none; }
+.dg-modele { font-weight: 600; color: var(--vert-clair, #6fd4b6); }
+.dg-tache { color: var(--gris, #8a8a96); }
+.dg-tache:not(:empty)::before { content: "· "; }
+.dg-spin { width: 11px; height: 11px; border-radius: 50%;
+  border: 2px solid rgba(111,212,182,.25); border-top-color: var(--vert-clair, #6fd4b6);
+  animation: dg-tourne .7s linear infinite; }
+@keyframes dg-tourne { to { transform: rotate(360deg); } }
 #saisie { flex: 1; resize: none; border: 0; outline: 0; background: transparent; color: var(--encre);
           font: 14px/1.45 var(--police); max-height: 140px; padding: 5px 0; }
 #saisie::placeholder { color: var(--encre-3); }

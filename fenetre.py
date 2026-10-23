@@ -130,9 +130,14 @@ class EcranFenetre:
         self.derniers_args[nom] = args or {}
         detail = "arguments illisibles" if illisible else json.dumps(args or {}, ensure_ascii=False)
         self.pont.emettre({"type": "outil", "nom": nom, "args": detail[:300]})
+        if nom == "second_avis":                 # délégation à Opus : pastille sous la barre
+            self.pont.emettre({"type": "delegation", "modele": "Opus",
+                               "tache": (args or {}).get("tache") or "réflexion"})
 
     def resultat(self, nom, texte):
         self.pont.emettre({"type": "resultat", "nom": nom, "texte": texte})
+        if nom == "second_avis":
+            self.pont.emettre({"type": "delegation_fin"})
         if nom in ("memoire_noter", "memoire_oublier"):        # la mémoire a bougé : on le montre
             self.pont.memoire_changee()
             args = self.derniers_args.get(nom, {})

@@ -120,6 +120,28 @@ function resultatOutil(nom, texte) {
   el.querySelector("pre").textContent = texte;
 }
 
+// Délégation à un autre modèle : pastille sous la barre pendant qu'il réfléchit,
+// elle disparaît quand il a rendu son résultat à l'agent.
+function afficherDelegation(modele, tache) {
+  const zone = $("#delegations");
+  if (!zone) return;
+  const p = document.createElement("div");
+  p.className = "delegation";
+  p.innerHTML = `<span class="dg-spin"></span><span class="dg-modele"></span><span class="dg-tache"></span>`;
+  p.querySelector(".dg-modele").textContent = modele || "Opus";
+  p.querySelector(".dg-tache").textContent = tache || "réflexion";
+  zone.appendChild(p);
+  requestAnimationFrame(() => p.classList.add("on"));
+}
+function retirerDelegation() {
+  const zone = $("#delegations");
+  if (!zone) return;
+  const p = zone.lastElementChild;
+  if (!p) return;
+  p.classList.remove("on");
+  setTimeout(() => p.remove(), 260);
+}
+
 let demandeOuverte = null;
 function demande(id, nom, args) {
   const el = bloc("demande verre", `<div class="titre">Root veut utiliser <b></b></div><pre></pre>
@@ -179,6 +201,8 @@ window.rootEvent = function (ev) {
     case "toi": ajouterToi(ev.texte); break;
     case "outil": ajouterOutil(ev.nom, ev.args); pulserChemin(ev.nom); break;
     case "resultat": resultatOutil(ev.nom, ev.texte); break;
+    case "delegation": afficherDelegation(ev.modele, ev.tache); break;
+    case "delegation_fin": retirerDelegation(); break;
     case "image": bloc("capture", `<img alt="capture d'écran vue par Root" src="${ev.src}">`); break;
     case "demande": demande(ev.id, ev.nom, ev.args); break;
     case "fin": fin(ev); break;
