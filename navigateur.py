@@ -104,8 +104,8 @@ class Brave:
         self.ws = websocket.create_connection(
             target["webSocketDebuggerUrl"], max_size=None, timeout=30)
         self._cible = target.get("id")
-        self.cmd("Page.enable")
-        self.cmd("Runtime.enable")
+        self._dialogue("Page.enable")               # ws déjà ouvert : pas via cmd (anti-récursion)
+        self._dialogue("Runtime.enable")
 
     def connecter(self):
         self.demarrer()
@@ -129,9 +129,9 @@ class Brave:
         return None
 
     # ── dialogue CDP ───────────────────────────────────────────────────────────
-    def cmd(self, method, params=None):
-        if self.ws is None:
-            self.connecter()
+    def _dialogue(self, method, params=None):
+        """Un aller-retour CDP sur le websocket courant. Lève RuntimeError pour une
+        erreur de protocole, et une erreur socket si le lien est rompu."""
         self._id += 1
         self.ws.send(json.dumps({"id": self._id, "method": method,
                                  "params": params or {}}))
@@ -141,6 +141,23 @@ class Brave:
                 if "error" in m:
                     raise RuntimeError(m["error"].get("message"))
                 return m.get("result", {})
+
+    def cmd(self, method, params=None, _reconnexion=True):
+        """Envoie une commande CDP. Si le lien est cassé (onglet fermé, pipe rompu),
+        se rebranche UNE fois sur un onglet valide et réessaie. Les erreurs de
+        protocole (RuntimeError) remontent telles quelles."""
+        if self.ws is None:
+            self.connecter()
+        try:
+            return self._dialogue(method, params)
+        except RuntimeError:
+            raise                                   # erreur CDP légitime
+        except Exception:                           # socket/pipe mort, onglet fermé
+            if not _reconnexion:
+                raise
+            self.ws, self._cible = None, None       # repartir d'un onglet valide
+            self.connecter()
+            return self._dialogue(method, params)
 
     def js(self, expression):
         r = self.cmd("Runtime.evaluate", {"expression": expression,
