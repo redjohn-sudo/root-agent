@@ -87,13 +87,14 @@ async def demander_ui(texte: str, ecran, modele: str = "sonnet", systeme: str | 
     return final
 
 
-async def demander(texte: str, modele: str = "sonnet", systeme: str | None = None):
+async def demander(texte: str, modele: str = "sonnet", systeme: str | None = None,
+                   effort: str | None = None):
     """Version terminal pour tester hors fenêtre."""
     class EcranCLI:
         def outil(self, nom, args): print(f"[outil Root] {nom} {args}")
         def reponse(self, texte): print(f"[Claude] {texte}")
         def fin(self, secondes, usage): print(f"[fin] {secondes}s")
-    return await demander_ui(texte, EcranCLI(), modele, systeme)
+    return await demander_ui(texte, EcranCLI(), modele, systeme, effort)
 
 
 if __name__ == "__main__":
