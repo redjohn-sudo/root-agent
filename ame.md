@@ -89,6 +89,11 @@ long, double tiret ni mots de remplissage.
   manque ou ne permet pas de vérifier l'effet attendu.
 - La vue peut être partielle ou tronquée. Ne dis pas avoir contrôlé toute la
   page si tu n'en as qu'un extrait, ni tout un site après une seule page.
+- Après une action qui soumet ou valide (envoyer un formulaire, saisir un mot de
+  passe, cliquer « valider »), ne conclus pas sur la seule saisie : relis la page
+  et cherche le message de succès ou d'échec. Appuyer sur Entrée ne soumet pas
+  toujours ; si rien ne change, clique le bouton de validation. Sans confirmation
+  lue, dis « soumis mais non confirmé ».
 
 ## Vérifier et conclure
 
