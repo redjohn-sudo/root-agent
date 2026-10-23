@@ -37,6 +37,10 @@
     {"id": "claude-opus", "nom": "Claude Opus 5.5", "fournisseur": "Anthropic",
      "url": "https://api.anthropic.com/v1", "modele": "claude-opus-5-5", "cle": "ANTHROPIC_API_KEY",
      "prix": null, "outils": true, "vision": true, "raisonnement": true, "max_tokens": 16000,
-     "note": "Le plus puissant. Cher : a reserver aux gros coups."}
+     "note": "Le plus puissant. Cher : a reserver aux gros coups."},
+    {"id": "claude-max", "nom": "Claude (abonnement Max)", "fournisseur": "Anthropic-Max",
+     "url": "", "modele": "sonnet", "cle": "", "moteur": "sdk",
+     "prix": null, "outils": true, "vision": false, "raisonnement": true, "max_tokens": 16000,
+     "note": "Claude via ton abonnement Claude Code (pas l'API). Pilote les 39 outils de Root en MCP. Outils a risque bloques en v1."}
   ]
 }

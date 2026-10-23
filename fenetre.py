@@ -719,6 +719,14 @@ class Pont:
                 self._reprendre()
             self.messages.append({"role": "user", "content": texte})
             self._sauver()
+            if self.cerveau.get("moteur") == "sdk":   # Claude via l'abonnement Max (Agent SDK)
+                import anyio, pont_root
+                self.emettre({"type": "etat", "valeur": "reflechit"})
+                rep = anyio.run(lambda: pont_root.demander_ui(
+                    texte, EcranFenetre(self), self.cerveau.get("modele", "sonnet")))
+                if rep:
+                    self.messages.append({"role": "assistant", "content": rep})
+                return
             if not cerveaux.cle(self.cerveau):
                 self.emettre({"type": "root", "texte":
                               f"Pas de clé pour {self.cerveau['nom']} : choisis un autre cerveau."})
