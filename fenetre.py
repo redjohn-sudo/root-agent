@@ -94,6 +94,7 @@ def memoire_pour_cerveau(souvenirs: str, cerveau: dict | None) -> str:
         out.append(ligne)
     return "\n".join(out)
 
+REGARD_FICHIER = Path.home() / ".local" / "root-regard.jsonl"  # Claude lit ça quand autorisé
 VERSION = "1.0"
 PANNEAUX_DOCK = [("cerveaux","Cerveaux"),("conversations","Conversations"),("memoire","Mémoire"),("outils","Outils"),("terminal","Terminal"),("pentest","Pentest"),("ame","Âme"),("proxy","Proxy")]
 ATTENTE_MAX = 600      # secondes pour répondre à une demande d'autorisation
@@ -177,6 +178,7 @@ class Pont:
         outils_reglages.appliquer_au_moteur()   # choix de Vincent → variables du moteur
         self.cle = root.charger_cle()            # clé DeepSeek, gardée pour resumer_blocs
         self.jour = root.tokens_charger()
+        self.regard = False          # Claude peut lire la conversation quand True (ton consentement)
         self.occupe = threading.Lock()
         self._accords: dict[int, dict] = {}
         self._shell = None            # le vrai terminal (PTY), à la demande
@@ -782,7 +784,27 @@ class Pont:
         except Exception:
             return None
 
+    def basculer_regard(self):
+        """Toggle : Claude peut lire la conversation (les events) quand c'est activé.
+        Le fichier est réinitialisé à chaque activation. Consentement explicite, à toi."""
+        self.regard = not self.regard
+        if self.regard:
+            try:
+                REGARD_FICHIER.parent.mkdir(parents=True, exist_ok=True)
+                REGARD_FICHIER.write_text(
+                    json.dumps({"type": "regard", "etat": "debut"}, ensure_ascii=False) + "\n",
+                    encoding="utf-8")
+            except Exception:
+                pass
+        return {"regard": self.regard}
+
     def emettre(self, ev):
+        if getattr(self, "regard", False):
+            try:
+                with open(REGARD_FICHIER, "a", encoding="utf-8") as f:
+                    f.write(json.dumps(ev, ensure_ascii=False) + "\n")
+            except Exception:
+                pass
         if self.window is not None:
             self.window.evaluate_js("window.rootEvent && window.rootEvent(%s)"
                                     % json.dumps(ev, ensure_ascii=False))

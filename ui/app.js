@@ -1469,3 +1469,16 @@ document.addEventListener("keydown", e => {
     location.reload();
   }
 }, true);
+
+// Logo Claude : autorise (ou coupe) la lecture de la conversation par Claude. Consentement.
+const regardBtn = $("#regard");
+if (regardBtn) {
+  regardBtn.addEventListener("click", async () => {
+    const r = await api().basculer_regard();
+    const on = !!(r && r.regard);
+    regardBtn.classList.toggle("on", on);
+    regardBtn.setAttribute("aria-pressed", on ? "true" : "false");
+    regardBtn.title = on ? "Claude peut lire cette conversation (clique pour couper)"
+                         : "Autoriser Claude à regarder cette conversation";
+  });
+}

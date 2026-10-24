@@ -195,6 +195,20 @@ body.reflechit #pastille { animation-duration: .7s; }
   border: 2px solid rgba(111,212,182,.25); border-top-color: var(--vert-clair, #6fd4b6);
   animation: dg-tourne .7s linear infinite; }
 @keyframes dg-tourne { to { transform: rotate(360deg); } }
+
+/* Logo Claude : consentement de regard, en haut a droite. */
+#regard { position: fixed; top: 16px; right: 18px; z-index: 40;
+  width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px;
+  color: var(--gris, #8a8a96); background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08); cursor: pointer;
+  transition: color .3s var(--ease), background .3s var(--ease), box-shadow .3s var(--ease); }
+#regard:hover { color: var(--encre, #eef1fa); background: rgba(255,255,255,.08); }
+#regard svg { fill: currentColor; transition: transform .4s var(--ease-out); }
+#regard.on { color: var(--vert-clair, #6fd4b6); background: rgba(111,212,182,.12);
+  border-color: rgba(111,212,182,.4); box-shadow: 0 0 0 3px rgba(111,212,182,.12); }
+#regard.on svg { animation: regard-pulse 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px rgba(111,212,182,.6)); }
+@keyframes regard-pulse { 0%,100% { transform: scale(1); opacity: .85; } 50% { transform: scale(1.18); opacity: 1; } }
 #saisie { flex: 1; resize: none; border: 0; outline: 0; background: transparent; color: var(--encre);
           font: 14px/1.45 var(--police); max-height: 140px; padding: 5px 0; }
 #saisie::placeholder { color: var(--encre-3); }
