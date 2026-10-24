@@ -203,7 +203,8 @@ body.reflechit #pastille { animation-duration: .7s; }
   opacity: .5; filter: grayscale(.45);
   transition: opacity .3s var(--ease), background .3s var(--ease), box-shadow .3s var(--ease), filter .3s var(--ease); }
 #regard:hover { opacity: .9; background: rgba(255,255,255,.08); }
-#regard .crabe { font-size: 17px; line-height: 1; display: block; transition: transform .4s var(--ease-out); }
+#regard .crabe { width: 20px; height: 20px; display: block; image-rendering: pixelated;
+  transition: transform .4s var(--ease-out); }
 #regard.on { opacity: 1; filter: none; background: rgba(217,119,87,.14);
   border-color: rgba(217,119,87,.5); box-shadow: 0 0 0 3px rgba(217,119,87,.14); }
 #regard.on .crabe { animation: regard-pulse 1.8s ease-in-out infinite;
