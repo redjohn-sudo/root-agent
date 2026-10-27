@@ -90,7 +90,7 @@ def charger_cle():
 # Autonomie de Root. « large » = elle agit seule, SAUF pour ce qui détruit des
 # données ou sort de la machine : là, elle demande à l'utilisateur. Mets "prudente"
 # pour qu'elle demande à chaque action qui modifie quoi que ce soit.
-AUTONOMIE = "large"
+AUTONOMIE = "prudente"
 
 # Pilotés par le panneau Outils de la fenêtre (outils_reglages.py). Par défaut,
 # rien n'est coupé, rien n'est rendu plus strict, et l'auto-exécution terminal
