@@ -31,7 +31,8 @@ class TestConfiguration(unittest.TestCase):
         texte = cerveaux.FICHIER.read_text(encoding="utf-8")
         self.assertIsNone(re.search(r"sk-[A-Za-z0-9]{8,}|eyJ[A-Za-z0-9_-]{20,}", texte))
         for c in cerveaux.liste():
-            self.assertRegex(c["cle"], r"^[A-Z0-9_]+$", "le champ cle doit être un NOM de variable")
+            if c["cle"]:  # cle vide = cerveau sans clé API (pont Max)
+                self.assertRegex(c["cle"], r"^[A-Z0-9_]+$", "le champ cle doit être un NOM de variable")
 
     def test_champs_requis(self):
         for c in cerveaux.liste():

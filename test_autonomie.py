@@ -190,6 +190,7 @@ class AutonomieLocale(unittest.TestCase):
         self.assertEqual(tache.motif, "annulation_processus_non_confirmee")
 
     def test_absence_progres_ne_devient_pas_un_succes(self):
+        self.tache = self.creer_tache(Budgets(sans_progres=3))
         for numero in range(3):
             self.assertTrue(self.avant(arguments={"essai": numero}).autorisee)
             self.tache.recevoir_resultat("reussi")
@@ -285,9 +286,10 @@ class AutonomieLocale(unittest.TestCase):
         self.assertEqual(tache.motif, "cycle_actions")
 
     def test_deux_approches_echouees_arretent(self):
-        self.assertTrue(self.tache.approche_echouee("obstacle-stable").autorisee)
-        self.assertFalse(self.tache.approche_echouee("obstacle-stable").autorisee)
-        self.assertEqual(self.tache.motif, "approches_epuisees")
+        tache = self.creer_tache(Budgets(approches=2))
+        self.assertTrue(tache.approche_echouee("obstacle-stable").autorisee)
+        self.assertFalse(tache.approche_echouee("obstacle-stable").autorisee)
+        self.assertEqual(tache.motif, "approches_epuisees")
 
     def test_reviser_plan_ne_reinitialise_pas_budget(self):
         self.tache.avant_requete()
@@ -633,7 +635,7 @@ class AdaptateurLocal(unittest.TestCase):
             self.pilote.avant_outil("lire", {}, cible="fichier", lecture_seule=True, permission=True)
 
     def test_adaptateur_budget_duree_pendant_lecture_version(self):
-        self.pilote._lire_version = lambda cible: setattr(self, "temps", 600.0) or "v1"
+        self.pilote._lire_version = lambda cible: setattr(self, "temps", Budgets().secondes) or "v1"
         decision = self.pilote.avant_outil("lire", {}, cible="fichier", lecture_seule=True,
                                           permission=self.permission)
         self.assertFalse(decision.autorisee)
@@ -657,7 +659,7 @@ class AdaptateurLocal(unittest.TestCase):
             permission=self.permission).autorisee)
         lectures = []
         self.pilote._lire_version = lambda cible: lectures.append(cible) or "v1"
-        self.temps = 600.0
+        self.temps = Budgets().secondes
         with self.assertRaises(ValueError):
             self.pilote.recevoir_resultat("reussi", texte="défaut")
         self.assertEqual(lectures, [])
@@ -774,7 +776,7 @@ class OutilsOptionnels(unittest.TestCase):
     def test_etat_controle_expiration_sans_lire_versions(self):
         self.capacite.demarrer("controle_local")
         self.capacite.pilote_local._lire_version = lambda cible: self.fail("Lecture tardive")
-        self.temps = 600.0
+        self.temps = Budgets().secondes
         self.assertEqual(json.loads(self.capacite.etat())["statut"], "incomplete")
 
     def test_reprise_apres_version_perimee_par_outil(self):
@@ -914,7 +916,7 @@ class ValidationSuitePython(unittest.TestCase):
     def test_retour_apres_delai_ne_lit_pas_contexte(self):
         self.assertTrue(self.avant().autorisee)
         self.profil._contexte_valide = lambda: self.fail("Lecture après délai")
-        self.temps = 600.0
+        self.temps = Budgets().secondes
         with self.assertRaises(ValueError):
             self.profil.recevoir_resultat(self.RAPPORT)
 
