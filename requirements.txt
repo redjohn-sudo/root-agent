@@ -1,5 +1,5 @@
 # Dépendances Python de Root (installer dans le venv ~/.local/root-venv).
-# pip install -r harness/requirements.txt
+# pip install -r requirements.txt
 rich
 prompt_toolkit
 websocket-client

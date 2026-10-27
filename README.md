@@ -1,116 +1,49 @@
-# Root Terminal
+# Root
 
-La fenêtre de Root : un terminal qui n'en est pas un. Une vraie app macOS, peinte en
-HTML/CSS/JS et personnalisable de A à Z, branchée sur le harness Python de Root
-(même boucle, mêmes 36 outils, même mémoire, mêmes gardes de sécurité).
+An LLM-agent harness written from scratch, with a real macOS window to talk to the agent and watch what it does. Run loop, tools, permissions, persistent memory, a macOS sandbox, and an AI red-team engine, all behind a terminal-that-isn't-one.
 
-## Lancer
+<p align="center"><img src="demos/root.gif" width="640" alt="Root answering in its own window and running a tool after asking permission"></p>
 
-```sh
-~/.local/root-venv/bin/python fenetre.py     # la fenêtre
-~/.local/root-venv/bin/python root.py        # le même Root, dans le terminal
-```
+> French-first by design: Root speaks French, and the code, docs and persona are in French. This README is the English entry point; the original is [`README.fr.md`](README.fr.md).
 
-Installation des dépendances : voir `INSTALL.md` (plus `pywebview` pour la fenêtre).
+## What it is
 
-## Ce qu'il y a
+Root is a personal agent. A single run loop drives any of several interchangeable LLMs, a registry of 42 tools, a lexical long-term memory, and a layer of security guards (secret redaction, path-traversal blocks, prompt-injection wrapping, consent on every risky action). The same engine runs in a plain terminal or in a native macOS window painted in HTML/CSS/JS.
 
-- `fenetre.py` : la fenêtre (pywebview / WebKit) et le pont vers le moteur.
-  `root.un_tour` passe par un objet « écran » : `EcranTerminal` ou `EcranFenetre`.
-- `ui/` : l'interface (`index.html`, `style.css`, `app.js`), le fond (`fond.jpg`,
-  Unsplash, licence libre) et les actions (`actions.json`, `actions.exemple.json`).
-- `cerveaux.json` + `cerveaux.py` : les LLM interchangeables (DeepSeek, Nebius :
-  Kimi K3, GLM-5.3, Qwen3.8, gpt-oss). Aucune clé dans le fichier, seulement le
-  nom de la variable qui la contient. Outils et vision mesurés le 21/10/2026.
-- `root.py` et ses modules : le harness (mémoire de Kimi K3, autonomie et
-  vérification de Codex, recherche de Claude cloud, action, sécurité, lecture,
-  immunité, consentement, entendre de Claude Code).
-- `outils_externes.py` : le registre, dans le code, de tous les outils que Vincent
-  veut dans Root (39, dont la boîte à outils CTF et la revue de code & proxy). Panneau Proxy (⌘9) : apprendre le test web avec Root (Burp + mitmproxy). Chacun
-  avec sa source, son rôle, sa détection et sa commande d'installation. Le panneau
-  Outils les montre avec leur état et un bouton « Installer » (pip / npm / brew).
-- `sandbox.py` + outil `executer_script` : Root écrit et lance son propre code
-  (python/bash) dans un bac à sable macOS (`sandbox-exec`) avec un timeout dur et
-  l'écriture confinée à un dossier jetable ; le réseau est permis (épreuves CTF).
-  C'est le levier pour résoudre un challenge : écrire un script, le lancer, itérer.
-  Les bibliothèques de Root (sympy, pwntools, pycryptodome…) y sont disponibles.
-- `pentest_journal.py` + panneau Pentest (⌘6) : lancer une campagne d'attaques
-  contre un cerveau depuis la fenêtre, répéter N fois, et garder la trace durable
-  (cible, attaques, méthode, résultats) dans `~/.local/root-pentest.db`. Onglets
-  Lancer / Historique / Failles (taux de réussite d'attaque par type). Un
-  « mandat de test » (system prompt, modifiable) cadre le modèle attaquant pour
-  qu'il sache travailler dans un test autorisé ; il n'est jamais envoyé à la cible.
-  Deux types de cible : un cerveau cloud, ou une **cible locale** (un modèle
-  ollama + un secret caché dans son prompt système, qu'on tente d'extraire ; juge
-  déterministe, 100 % hors ligne).
-- panneau Réglages (⌘8) : volontairement léger. Montrer/masquer chaque icône du
-  dock (anti-surcharge, et pour l'édition publique on masque le cyber d'un coup),
-  changer le fond, « moins d'animations », et un « à propos » (version, édition).
-  Les choix vivent dans reglages.local.json (hors git).
-- `ame.py` + panneau Âme (⌘7) : qui est Root et ses règles. Le socle gravé
-  (ame.md : identité, sincérité, anti-fuite, anti-injection, stop) est montré mais
-  non modifiable depuis la fenêtre ; une couche de Vincent (ton + ses propres
-  règles, ame_perso.local.json hors git) s'ajoute au prompt système, mis à jour en
-  direct. Le socle reste toujours devant, les réglages ne le remplacent jamais.
-- `redteam.py` : le cœur de red team IA (probe / detector / generator / harnais,
-  façon garak). Probes de base (fuite de prompt, injection directe et indirecte,
-  encodage, jeu de rôle), detectors (canari, chaîne, refus, juge LLM), et chargeurs
-  de règles YAML (promptmap) et de corpus (jailbreak_llms). Attaque un vrai cerveau
-  de Root et sort un rapport chiffré. Usage sur cibles autorisées seulement.
-  Feuille de route complète : `CONCEPTION-REDTEAM.md`.
-- `README-MOTEUR.md`, `CONCEPTION-*.md`, `JOURNAL.md`, `CANAL.md` : la conception et
-  la coordination des agents.
+- **Interchangeable brains** (`cerveaux.json`, `cerveaux.py`): DeepSeek, Nebius (Kimi K3, GLM-5.3, Qwen3.8, gpt-oss), and Claude (Sonnet / Opus, or an Opus bridge over a Max subscription). No key lives in the file, only the name of the env var that holds it.
+- **The loop** (`root.py`): bounded steps, robust dispatch on malformed tool JSON, back-off and retry on 429/5xx/network, image pruning and output truncation to keep context small.
+- **Memory** (`memoire.py`, `memoire_edition.py`): durable facts by category, lexical recall (Jaccard over normalised tokens, no model call), a ceiling gauge. Personal memory (`memoire.md`) never leaves the machine.
+- **Security** (`securite.py`, `immunite.py`, `consentement.py`): every tool result is redacted for secrets, internal URLs and path traversal are blocked, web pages are wrapped against injection, and no action that can change state runs without explicit consent.
+- **Sandbox** (`sandbox.py`): Root writes and runs its own Python/bash inside a macOS `sandbox-exec` jail, with a hard timeout and writes confined to a throwaway folder.
+- **AI red-team engine** (`redteam.py`): a garak-style probe / detector / generator / harness core. Base probes (prompt leak, direct and indirect injection, encoding, role-play), detectors (canary, refusal, LLM judge), YAML rule loaders. Runs against authorised targets only and outputs a scored report. See [`CONCEPTION-REDTEAM.md`](CONCEPTION-REDTEAM.md).
+- **Pentest journal** (`pentest_journal.py`): run attack campaigns against a brain, repeat N times, keep a durable trace (target, attacks, method, results). Targets can be a cloud brain or a fully offline local target (an ollama model with a hidden secret to extract, deterministic judge).
 
-## Le dock
+## Install
 
-Une icône = un panneau. Faits : **Cerveaux** (⌘1), **Conversations** (⌘2), **Mémoire** (⌘3), **Outils**
-(⌘4), **Terminal** (⌘5) et **Pentest** (⌘6) et **Âme** (⌘7), **Réglages** (⌘8) et **Proxy** (⌘9). À venir : Actions, Comparer.
-
-**Terminal** (`terminal_shell.py` + `ui/vendor/xterm.js`) : un vrai shell (PTY)
-dans la fenêtre, où Vincent tape ses commandes, comme dans Ghostty. Rien à voir
-avec l'outil `terminal` du cerveau : ici le harness ne lit pas l'entrée et ne
-l'envoie nulle part, ça reste entre le PTY et l'affichage.
-
-**Outils** (`outils_reglages.py`) : les outils par famille (repliées par défaut,
-avec une recherche), chacun avec son risque. On coupe un outil (il n'est plus
-proposé au cerveau), on le rend plus strict (toujours demander), on choisit
-l'autonomie et des préréglages. Option éteinte par défaut, « commandes sans
-confirmation » : Vincent liste les préfixes de commandes terminal qui tournent
-sans accord en autonomie large, pour ses labos et ses CTF.
-
-**Mes outils** : Vincent déclare ses propres outils (une commande locale, ou un
-dépôt GitHub qu'il a installé). Il colle un lien, Root lit le README pour préparer
-une fiche, Vincent complète et valide ; rien ne s'installe ni ne s'exécute tout
-seul. L'outil passe ensuite par les mêmes autorisations que les autres. Les règles
-de sécurité du moteur ne sont jamais affaiblies : on n'ajoute ou ne retire que des
-demandes, sur décision explicite.
-
-**Conversations** rassemble celles de Root, Claude Code, Codex et Hermes
-(`conversations.py`), rangées par projet, cherchables dans tout leur texte. Les
-fichiers des autres outils sont seulement lus ; titres, projets et épingles vivent
-dans `~/.local/root-conversations/meta.json`. Une conversation d'un autre outil
-s'ouvre en lecture : « Continuer avec Root » ou « Rouvrir » dans son outil.
-
-**Mémoire** montre les faits durables de Root par catégorie (`memoire_edition.py`
-par-dessus les règles de `memoire.py`) : ajouter, modifier, oublier, avec la jauge
-du plafond et celle de la conversation en cours. Quand Root retient un fait seul,
-une notification propose d'annuler. `memoire.md` reste hors de GitHub.
-
-Raccourcis : ⌘1 cerveaux, ⌘2 conversations, ⌘3 mémoire, ⌘4 outils, ⌘5 terminal, ⌘6 pentest, ⌘7 âme, ⌘8 réglages, ⌘9 proxy, ⌘K palette, ⌘N nouvelle conversation, ⌘⏎ / esc pour
-autoriser ou refuser une action de Root.
-
-## En faire une app (Root.app)
+Requires macOS and Python 3.14. Full steps in [`INSTALL.md`](INSTALL.md).
 
 ```sh
-python3 paquet/faire_icone.py paquet/icone.png   # l'icône (Pillow)
-bash paquet/faire_app.sh                          # monte paquet/Root.app
+python3.14 -m venv ~/.local/root-venv
+~/.local/root-venv/bin/pip install -r requirements.txt
 ```
 
-`Root.app` est une vraie app macOS : double-clic, icône, Dock, Applications.
-Son lanceur appelle le venv et le code en place (`~/.local/root-venv`,
-`~/Projets/root-harness`), donc tes mises à jour de code sont prises sans
-reconstruire. `Root.icns` est versionné ; refaire l'icône demande Pillow.
-Les logs de l'app vont dans `~/.local/root-app.log`.
+API keys are read from environment variables (see `cerveaux.json` for the names). Nothing is stored in the repo.
+
+## Usage
+
+```sh
+~/.local/root-venv/bin/python fenetre.py     # the window
+~/.local/root-venv/bin/python root.py        # the same Root, in a terminal
+```
+
+The window is a dock of panels, one shortcut each: Brains (⌘1), Conversations (⌘2), Memory (⌘3), Tools (⌘4), Terminal (⌘5), Pentest (⌘6), Soul (⌘7), Settings (⌘8), Proxy (⌘9). `⌘⏎` / `esc` approve or deny an action Root asks for.
+
+Build it into a real `Root.app` (double-click, Dock icon):
+
+```sh
+python3 paquet/faire_icone.py paquet/icone.png
+bash paquet/faire_app.sh
+```
 
 ## Tests
 
@@ -118,4 +51,14 @@ Les logs de l'app vont dans `~/.local/root-app.log`.
 ~/.local/root-venv/bin/python -m unittest discover -p "test_*.py"
 ```
 
-533 tests au 22/10/2026, hors réseau.
+Offline, no network. 533 tests.
+
+## Roadmap
+
+- Actions panel and a brain-comparison view (both stubbed in the dock).
+- Widen the red-team corpus and rule loaders (promptmap, jailbreak_llms).
+- Hardening pass driven by the red-team engine's own findings.
+
+## License
+
+Source-available under the **PolyForm Noncommercial License 1.0.0** ([`LICENSE`](LICENSE)). You may read, run and modify Root for any noncommercial purpose. Commercial use requires written permission from the author.

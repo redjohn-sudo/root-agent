@@ -14,7 +14,7 @@ ne vit dans ce dépôt : les clés se posent en local (voir plus bas).
 
 ```sh
 python3.14 -m venv ~/.local/root-venv
-~/.local/root-venv/bin/pip install -r harness/requirements.txt
+~/.local/root-venv/bin/pip install -r requirements.txt
 ```
 
 ## 3. Clés — jamais dans le dépôt
@@ -28,7 +28,7 @@ Dans `~/.hermes/profiles/racine/.env` (une ligne par clé) :
 ## 4. Lancer
 
 ```sh
-~/.local/root-venv/bin/python harness/root.py
+~/.local/root-venv/bin/python root.py
 ```
 
 Au premier usage, macOS demande d'autoriser le terminal (Ghostty) pour
