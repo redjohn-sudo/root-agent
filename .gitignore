@@ -22,3 +22,7 @@ ame_perso.local.json
 
 # Fond personnalisé (local)
 ui/fond.local.jpg
+
+# Personal, never in the repository (the window falls back to ui/actions.exemple.json)
+ui/actions.json
+reglages.local.json
